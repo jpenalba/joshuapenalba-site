@@ -97,16 +97,18 @@
 
   /* ---------- appointments w/ tower images ---------- */
   .catalog{ display:flex; flex-direction:column; }
-  .entry{ display:grid; grid-template-columns: 96px 92px 1fr; gap: 18px; padding: 20px 0; border-top: 1px solid var(--line); align-items:start; }
+  .entry{ display:grid; grid-template-columns: 96px 1fr; gap: 18px; padding: 20px 0; border-top: 1px solid var(--line); align-items:start; }
   .entry:first-child{ border-top:none; padding-top:0; }
+  .entry-marker{ display:flex; flex-direction:column; align-items:center; gap:8px; }
   .entry-tower{ width:96px; height:96px; border-radius:50%; overflow:hidden; border:1px solid var(--line); }
   .entry-tower img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .entry-code{ font-size: 0.72rem; color: var(--ink-faint); padding-top: 3px; }
+  .entry-code{ font-size: 0.72rem; color: var(--ink-faint); }
   .entry-inst{ font-family:'Manrope', sans-serif; font-size: 1.02rem; font-weight:600; margin:0 0 2px; }
   .entry-role{ font-size: 0.85rem; color: var(--accent); margin: 0 0 4px; }
   .entry-advisor{ font-size: 0.85rem; color: var(--ink-soft); margin:0; }
   @media (max-width: 560px){
     .entry{ grid-template-columns: 72px 1fr; gap: 12px; }
+    .entry-marker{ display:contents; }
     .entry-code{ grid-column: 1 / -1; order:-1; padding-top:0; }
     .entry-tower{ width:72px; height:72px; }
   }
@@ -168,16 +170,20 @@
     <div class="section-head"><h2>Education &amp; professional appointments</h2></div>
     <div class="catalog">
       <div class="entry">
-        <div class="entry-tower"><img src="intro_mfn.jpg" alt="Illustration of the TV Tower, Berlin"></div>
-        <div class="entry-code mono">2021–now</div>
+        <div class="entry-marker">
+          <div class="entry-code mono">2021–now</div>
+          <div class="entry-tower"><img src="intro_mfn.jpg" alt="Illustration of the TV Tower, Berlin"></div>
+        </div>
         <div>
           <p class="entry-inst">Museum für Naturkunde, Berlin</p>
           <p class="entry-role">Research scientist · Center for Integrative Biodiversity Discovery</p>
         </div>
       </div>
       <div class="entry">
-        <div class="entry-tower"><img src="intro_lmu-1.jpg" alt="Illustration of the Olympic Tower, Munich"></div>
-        <div class="entry-code mono">2017–2020</div>
+        <div class="entry-marker">
+          <div class="entry-code mono">2017–2020</div>
+          <div class="entry-tower"><img src="intro_lmu-1.jpg" alt="Illustration of the Olympic Tower, Munich"></div>
+        </div>
         <div>
           <p class="entry-inst">Ludwig-Maximilians-Universität München</p>
           <p class="entry-role">Postdoctoral researcher · Division of Evolutionary Biology</p>
@@ -185,8 +191,10 @@
         </div>
       </div>
       <div class="entry">
-        <div class="entry-tower"><img src="intro_anu.jpg" alt="Illustration of Telstra Tower, Canberra"></div>
-        <div class="entry-code mono">2013–2017</div>
+        <div class="entry-marker">
+          <div class="entry-code mono">2013–2017</div>
+          <div class="entry-tower"><img src="intro_anu.jpg" alt="Illustration of Telstra Tower, Canberra"></div>
+        </div>
         <div>
           <p class="entry-inst">Australian National University &amp; CSIRO</p>
           <p class="entry-role">PhD candidate · Research School of Biology</p>
@@ -194,8 +202,10 @@
         </div>
       </div>
       <div class="entry">
-        <div class="entry-tower"><img src="intro_berkeley.jpg" alt="Illustration of Sather Tower, Berkeley"></div>
-        <div class="entry-code mono">2008–2013</div>
+        <div class="entry-marker">
+          <div class="entry-code mono">2008–2013</div>
+          <div class="entry-tower"><img src="intro_berkeley.jpg" alt="Illustration of Sather Tower, Berkeley"></div>
+        </div>
         <div>
           <p class="entry-inst">University of California, Berkeley</p>
           <p class="entry-role">B.A. Integrative Biology (Hons)</p>
