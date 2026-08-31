@@ -431,18 +431,17 @@
   }
   .leaflet-control-attribution{ font-size: 9px !important; }
 
-  /* custom circular pin — swap the placeholder text for a real photo of the building */
+  /* custom pin badge showing the MfN logo */
   .mfn-pin-inner{
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: var(--accent);
+    width: 56px; height: 40px;
+    border-radius: 8px;
+    background: #fff;
     border: 3px solid var(--bg);
     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     display:flex; align-items:center; justify-content:center;
-    color: #F8F7F2;
-    font-size: 0.6rem;
-    letter-spacing: 0.02em;
+    padding: 4px;
   }
+  .mfn-pin-inner img{ width:100%; height:100%; object-fit:contain; display:block; }
 
   @media (max-width: 640px){
     .contact-grid{ grid-template-columns: 1fr; gap: 28px; }
@@ -578,8 +577,8 @@
         <div class="contact-row">
           <span class="contact-label mono">Social</span>
           <div class="social-row">
-            <a href="https://twitter.com/joshpenalba" aria-label="Twitter/X" title="@joshpenalba">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M18 3h3l-7.5 8.6L22 21h-6.7l-5.2-6.8L4 21H1l8-9.2L2 3h6.9l4.7 6.2L18 3z" fill="currentColor"/></svg>
+            <a href="https://bsky.app/profile/jpenalba.bsky.social" aria-label="Bluesky" title="@jpenalba.bsky.social">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5.202 2.857C7.954 4.922 10.913 9.11 12 11.358c1.087-2.247 4.046-6.436 6.798-8.501C20.783 1.366 24 .213 24 3.883c0 .732-.42 6.156-.667 7.037-.856 3.061-3.978 3.842-6.755 3.37 4.854.826 6.089 3.562 3.422 6.299-5.065 5.196-7.28-1.304-7.847-2.97-.104-.305-.152-.448-.153-.327 0-.121-.05.022-.153.327-.568 1.666-2.782 8.166-7.847 2.97-2.667-2.737-1.432-5.473 3.422-6.3-2.777.473-5.899-.308-6.755-3.369C.42 10.04 0 4.615 0 3.883c0-3.67 3.217-2.517 5.202-1.026" fill="currentColor"/></svg>
             </a>
             <a href="http://scholar.google.com.au/citations?user=zlg1L_AAAAAJ&hl=en&oi=ao" aria-label="Google Scholar" title="Google Scholar">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 1 9l11 7 9-5.8V17h2V9L12 2zM5 12.2V17c0 2.2 3.1 4 7 4s7-1.8 7-4v-4.8l-7 4.6-7-4.6z" fill="currentColor"/></svg>
@@ -627,18 +626,17 @@
     dragging: !L.Browser.mobile,
     attributionControl: true
   });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    maxZoom: 19
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; <a href="https://www.esri.com">Esri</a>',
+    maxZoom: 16
   }).addTo(map);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  // Swap the placeholder text below for <img src="mfn-photo.jpg"> to use a real photo
   const pinIcon = L.divIcon({
     className: 'mfn-pin',
-    html: '<div class="mfn-pin-inner mono">MfN</div>',
-    iconSize: [44, 44],
-    iconAnchor: [22, 22]
+    html: '<div class="mfn-pin-inner"><img src="mfn-logo.png" alt="Museum für Naturkunde logo"></div>',
+    iconSize: [56, 40],
+    iconAnchor: [28, 20]
   });
   L.marker(mfnCoords, { icon: pinIcon }).addTo(map);
 </script>
