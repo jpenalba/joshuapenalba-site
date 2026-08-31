@@ -130,7 +130,7 @@
     border-bottom: 1px solid var(--line-strong); padding-bottom:1px; margin-right: 14px;
   }
   .highlight-links a:hover{ border-color: var(--accent); }
-  .highlight-links .cite-count{ font-size: 0.78rem; color: var(--ink-faint); }
+  .highlight-links .cite-count{ font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); }
 
   @media (max-width:560px){
     .highlight{ grid-template-columns: 1fr; gap:6px; }
@@ -165,7 +165,7 @@
   .pub-cite .journal{ font-style: italic; }
   .pub-cite a{ color: var(--accent); text-decoration:none; border-bottom:1px solid var(--line-strong); }
   .pub-cite a:hover{ border-color: var(--accent); }
-  .pub-cite .cite-count{ font-size: 0.78rem; color: var(--ink-faint); }
+  .pub-cite .cite-count{ font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); }
 
   footer{ padding: 40px 0 64px; border-top: 1px solid var(--line); }
   .contact-link{ font-family:'Manrope', sans-serif; font-weight:600; font-size: 1.1rem; text-decoration:none; border-bottom: 2px solid var(--line-strong); padding-bottom:2px; }
@@ -212,37 +212,19 @@
     <div class="highlight-list">
       <div class="highlight">
         <div class="highlight-marker">
-          <div class="highlight-icon" title="Superb fairywren">
+          <div class="highlight-icon" title="Suture zone">
             <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-              <circle cx="12" cy="21" r="5.2" stroke="var(--accent)" stroke-width="1.6"/>
-              <circle cx="7.5" cy="12.5" r="2.6" stroke="var(--accent)" stroke-width="1.6"/>
-              <path d="M5.3 11.3l-2.8-.6" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
-              <path d="M15.5 17.5L21 5" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round"/>
-              <path d="M19.3 8.2l1.4-2.9M21.7 9l1-3.3" stroke="var(--accent-2)" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M16 6a10 10 0 0 0 0 20" stroke="var(--accent)" stroke-width="1.4"/>
+              <path d="M16 6a10 10 0 0 1 0 20" stroke="var(--accent-2)" stroke-width="1.4"/>
+              <path d="M16 6v3l3 2-5 3 5 3-5 3 5 3-5 3 3 2v3" stroke="var(--ink-soft)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
             </svg>
           </div>
-          <div class="highlight-year mono">2020</div>
+          <div class="highlight-year mono">2025</div>
         </div>
         <div>
-          <p class="highlight-blurb">Built the first chromosome-scale genome for the superb fairywren</p>
-          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Deng, Y., Fang, Q., Joseph, L., Moritz, C., Cockburn, A. (2020) "Genome of an iconic Australian bird: Chromosome-scale assembly and linkage map of the superb fairy-wren (<i>Malurus cyaneus</i>)" <span class="journal">Molecular Ecology Resources</span> 20(2), 560–578</p>
-          <div class="highlight-links"><a href="https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13124" target="_blank" rel="noopener">Article</a><a href="https://www.biorxiv.org/content/10.1101/742965v1.abstract" target="_blank" rel="noopener">Preprint</a><span class="cite-count mono" data-doi="10.1111/1755-0998.13124"></span></div>
-        </div>
-      </div>
-      <div class="highlight">
-        <div class="highlight-marker">
-          <div class="highlight-icon" title="Recombination">
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-              <path d="M5 11h6l10 10h6" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5 21h6l10-10h6" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div class="highlight-year mono">2020</div>
-        </div>
-        <div>
-          <p class="highlight-blurb">A review of how to actually estimate recombination rate variation</p>
-          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Wolf, J.B.W. (2020) "From molecules to populations: appreciating and estimating recombination rate variation" <span class="journal">Nature Reviews Genetics</span> 1–17</p>
-          <div class="highlight-links"><a href="https://www.nature.com/articles/s41576-020-0240-1" target="_blank" rel="noopener">Article</a><span class="cite-count mono" data-doi="10.1038/s41576-020-0240-1"></span></div>
+          <p class="highlight-blurb">Review on suture zones and speciation</p>
+          <p class="highlight-cite">Wait, D.R., <b>Peñalba, J.V.</b> (2025) "Suture zones, speciation, and evolution" <span class="journal">Evolution</span> 79(3), 329–341</p>
+          <div class="highlight-links"><a href="https://doi.org/10.1093/evolut/qpae184" target="_blank" rel="noopener">Article</a><span class="cite-count mono" data-doi="10.1093/evolut/qpae184"></span></div>
         </div>
       </div>
       <div class="highlight">
@@ -256,26 +238,44 @@
           <div class="highlight-year mono">2024</div>
         </div>
         <div>
-          <p class="highlight-blurb">Reviewed the role of hybridization in forming and sustaining species</p>
+          <p class="highlight-blurb">Review on hybridization and speciation</p>
           <p class="highlight-cite"><b>Peñalba, J.V.</b>, Runemark, A., Meier, J.I., Singh, P., Wogan, G.O.U. et al. (2024) "The role of hybridization in species formation and persistence" <span class="journal">Cold Spring Harbor Perspectives in Biology</span> 16(12), a041445</p>
           <div class="highlight-links"><a href="https://cshperspectives.cshlp.org/content/16/12/a041445" target="_blank" rel="noopener">Article</a><span class="cite-count mono" data-doi="10.1101/cshperspect.a041445"></span></div>
         </div>
       </div>
       <div class="highlight">
         <div class="highlight-marker">
-          <div class="highlight-icon" title="Suture zone">
+          <div class="highlight-icon" title="Recombination">
             <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-              <path d="M16 6a10 10 0 0 0 0 20" stroke="var(--accent)" stroke-width="1.4"/>
-              <path d="M16 6a10 10 0 0 1 0 20" stroke="var(--accent-2)" stroke-width="1.4"/>
-              <path d="M16 6v3l3 2-5 3 5 3-5 3 5 3-5 3 3 2v3" stroke="var(--ink-soft)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+              <path d="M5 11h6l10 10h6" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5 21h6l10-10h6" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <div class="highlight-year mono">2025</div>
+          <div class="highlight-year mono">2020</div>
         </div>
         <div>
-          <p class="highlight-blurb">Reframed suture zones as a comparative tool for studying speciation</p>
-          <p class="highlight-cite">Wait, D.R., <b>Peñalba, J.V.</b> (2025) "Suture zones, speciation, and evolution" <span class="journal">Evolution</span> 79(3), 329–341</p>
-          <div class="highlight-links"><a href="https://doi.org/10.1093/evolut/qpae184" target="_blank" rel="noopener">Article</a><span class="cite-count mono" data-doi="10.1093/evolut/qpae184"></span></div>
+          <p class="highlight-blurb">Review on estimating recombination rate variation</p>
+          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Wolf, J.B.W. (2020) "From molecules to populations: appreciating and estimating recombination rate variation" <span class="journal">Nature Reviews Genetics</span> 1–17</p>
+          <div class="highlight-links"><a href="https://www.nature.com/articles/s41576-020-0240-1" target="_blank" rel="noopener">Article</a><span class="cite-count mono" data-doi="10.1038/s41576-020-0240-1"></span></div>
+        </div>
+      </div>
+      <div class="highlight">
+        <div class="highlight-marker">
+          <div class="highlight-icon" title="Superb fairywren">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <circle cx="12" cy="21" r="5.2" stroke="var(--accent)" stroke-width="1.6"/>
+              <circle cx="7.5" cy="12.5" r="2.6" stroke="var(--accent)" stroke-width="1.6"/>
+              <path d="M5.3 11.3l-2.8-.6" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M15.5 17.5L21 5" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M19.3 8.2l1.4-2.9M21.7 9l1-3.3" stroke="var(--accent-2)" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="highlight-year mono">2020</div>
+        </div>
+        <div>
+          <p class="highlight-blurb">Reference genome assembly of the superb fairy-wren</p>
+          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Deng, Y., Fang, Q., Joseph, L., Moritz, C., Cockburn, A. (2020) "Genome of an iconic Australian bird: Chromosome-scale assembly and linkage map of the superb fairy-wren (<i>Malurus cyaneus</i>)" <span class="journal">Molecular Ecology Resources</span> 20(2), 560–578</p>
+          <div class="highlight-links"><a href="https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13124" target="_blank" rel="noopener">Article</a><a href="https://www.biorxiv.org/content/10.1101/742965v1.abstract" target="_blank" rel="noopener">Preprint</a><span class="cite-count mono" data-doi="10.1111/1755-0998.13124"></span></div>
         </div>
       </div>
     </div>
