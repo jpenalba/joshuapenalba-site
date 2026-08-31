@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publications — Dr. Joshua Peñalba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FAFAF7;
+    --bg-raised: #F3F2EC;
+    --ink: #17181A;
+    --ink-soft: #5C5F5B;
+    --ink-faint: #9A9C95;
+    --accent: #1F5C4D;
+    --accent-2: #3D4E8C;
+    --line: #DEDCD3;
+    --line-strong: #C7C4B6;
+    --max: 760px;
+    --dark-bg: #232320;
+    --dark-line: #3A3A36;
+    --dark-ink-soft: #B8B7AE;
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0; background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  a{ color: inherit; }
+  .mono{ font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.02em; }
+  .wrap{ max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- nav ---------- */
+  header{
+    background: var(--dark-bg); color: #F2F1EA;
+    border-bottom: 1px solid var(--dark-line);
+    position: sticky; top:0; z-index:50;
+  }
+  .nav-row{ display:flex; align-items:center; justify-content: space-between; padding: 16px 24px; max-width: var(--max); margin: 0 auto; }
+  .nav-mark{ font-family:'Manrope', sans-serif; font-weight:500; font-size: 1.05rem; color:#F2F1EA; text-decoration:none; }
+  nav ul{ list-style:none; display:flex; gap: 24px; margin:0; padding:0; }
+  nav a{ text-decoration:none; font-size: 0.82rem; color: var(--dark-ink-soft); letter-spacing: 0.03em; text-transform: uppercase; position:relative; }
+  nav a.current{ color:#F2F1EA; }
+  nav a::after{
+    content:''; position:absolute; left:0; right:0; bottom:-4px; height:2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transform: scaleX(0); transform-origin: left; transition: transform .25s ease;
+  }
+  nav a:hover::after, nav a:focus-visible::after{ transform: scaleX(1); }
+  .menu-btn{ display:none; background:none; border:1px solid var(--dark-line); border-radius:6px; padding:8px 10px; cursor:pointer; }
+  @media (max-width: 640px){
+    nav.desktop-nav{ display:none; }
+    .menu-btn{ display:block; }
+    nav.mobile-nav{ display:none; flex-direction:column; gap:0; max-width: var(--max); margin:0 auto; padding: 0 24px 16px; }
+    nav.mobile-nav.open{ display:flex; }
+    nav.mobile-nav a{ padding: 12px 0; border-bottom: 1px solid var(--dark-line); text-transform:none; font-size: 0.95rem; }
+    nav.mobile-nav a::after{ display:none; }
+  }
+
+  .page-head{ padding: 40px 0 32px; }
+  .eyebrow{ font-size: 0.78rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 10px; }
+  h1{ font-family:'Manrope', sans-serif; font-weight:700; font-size: clamp(1.9rem, 5vw, 2.6rem); margin: 0 0 8px; letter-spacing:-0.01em; }
+  .page-lede{ color: var(--ink-soft); max-width: 60ch; }
+  .scholar-link{ display:inline-flex; align-items:center; gap:6px; margin-top:14px; font-size:0.85rem; color:var(--accent); text-decoration:none; border-bottom:1px solid var(--line-strong); padding-bottom:1px; }
+  .scholar-link:hover{ border-color: var(--accent); }
+
+  section{ padding: 40px 0; border-top: 1px solid var(--line); }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 24px; }
+  .section-head h2{ font-family:'Manrope', sans-serif; font-weight:600; font-size: 1.25rem; margin:0; }
+  .section-count{ font-size: 0.78rem; color: var(--ink-faint); }
+
+  /* ---------- selected / highlights ---------- */
+  .highlight-list{ display:flex; flex-direction:column; }
+  .highlight{
+    display:grid;
+    grid-template-columns: 78px 1fr;
+    gap: 20px;
+    padding: 24px 0;
+    border-top: 1px solid var(--line);
+  }
+  .highlight:first-child{ border-top:none; padding-top:0; }
+  .highlight-year{ font-size: 0.78rem; color: var(--ink-faint); padding-top:3px; }
+  .highlight-blurb{
+    font-family:'Manrope', sans-serif;
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: var(--accent);
+  }
+  .highlight-cite{ font-size: 0.9rem; color: var(--ink-soft); margin: 0 0 8px; }
+  .highlight-cite b{ color: var(--ink); }
+  .highlight-cite .journal{ font-style: italic; }
+  .highlight-links a{
+    font-size: 0.78rem; color: var(--accent); text-decoration:none;
+    border-bottom: 1px solid var(--line-strong); padding-bottom:1px; margin-right: 14px;
+  }
+  .highlight-links a:hover{ border-color: var(--accent); }
+
+  @media (max-width:560px){
+    .highlight{ grid-template-columns: 1fr; gap:6px; }
+  }
+
+  /* ---------- full list ---------- */
+  .pub-year-group{ margin-bottom: 6px; }
+  .pub-year{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    padding: 18px 0 10px;
+    border-top: 1px solid var(--line);
+  }
+  .pub-year-group:first-child .pub-year{ border-top:none; padding-top:0; }
+  .pub-item{ display:flex; gap:10px; padding: 10px 0; align-items:baseline; flex-wrap: wrap; }
+  .pub-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink:0;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+  .pub-tag.first{ background: rgba(31,92,77,0.12); color: var(--accent); }
+  .pub-tag.co{ background: var(--bg-raised); color: var(--ink-faint); border:1px solid var(--line); }
+  .pub-cite{ font-size: 0.9rem; color: var(--ink-soft); flex:1; min-width: 220px; }
+  .pub-cite b{ color: var(--ink); }
+  .pub-cite .journal{ font-style: italic; }
+  .pub-cite a{ color: var(--accent); text-decoration:none; border-bottom:1px solid var(--line-strong); }
+  .pub-cite a:hover{ border-color: var(--accent); }
+
+  footer{ padding: 40px 0 64px; border-top: 1px solid var(--line); }
+  .contact-link{ font-family:'Manrope', sans-serif; font-weight:600; font-size: 1.1rem; text-decoration:none; border-bottom: 2px solid var(--line-strong); padding-bottom:2px; }
+  .contact-link:hover{ border-color: var(--accent); color: var(--accent); }
+  .foot-note{ margin-top: 20px; font-size: 0.76rem; color: var(--ink-faint); }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; scroll-behavior:auto !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-row">
+    <a class="nav-mark" href="index.html">J. Peñalba</a>
+    <nav class="desktop-nav">
+      <ul>
+        <li><a href="index.html#people">People</a></li>
+        <li><a href="index.html#research">Research</a></li>
+        <li><a href="cv-prototype.html">CV</a></li>
+        <li><a href="#" class="current">Publications</a></li>
+        <li><a href="index.html#site-footer">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="menu-btn" aria-label="Toggle menu" aria-expanded="false" id="menuBtn">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="#F2F1EA" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <nav class="mobile-nav" id="mobileNav">
+    <a href="index.html#people">People</a>
+    <a href="index.html#research">Research</a>
+    <a href="cv-prototype.html">CV</a>
+    <a href="#">Publications</a>
+    <a href="index.html#site-footer">Contact</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <div class="page-head">
+    <p class="eyebrow">Peer-reviewed &amp; preprint</p>
+    <h1>Publications</h1>
+    <p class="page-lede">Reverse chronological, with a few highlights pulled out up top. First-author work is tagged separately from collaborations.</p>
+    <a class="scholar-link" href="http://scholar.google.com.au/citations?user=zlg1L_AAAAAJ&hl=en&oi=ao" target="_blank" rel="noopener">Full list &amp; citation metrics on Google Scholar →</a>
+  </div>
+
+  <section style="border-top:none; padding-top:0;">
+    <div class="section-head">
+      <h2>Selected</h2>
+      <span class="section-count mono">4</span>
+    </div>
+    <div class="highlight-list">
+      <div class="highlight">
+        <div class="highlight-year mono">2020</div>
+        <div>
+          <p class="highlight-blurb">Built the first chromosome-scale genome for the superb fairywren</p>
+          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Deng, Y., Fang, Q., Joseph, L., Moritz, C., Cockburn, A. (2020) "Genome of an iconic Australian bird: Chromosome-scale assembly and linkage map of the superb fairy-wren (<i>Malurus cyaneus</i>)" <span class="journal">Molecular Ecology Resources</span> 20(2), 560–578</p>
+          <div class="highlight-links"><a href="https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13124" target="_blank" rel="noopener">Article</a><a href="https://www.biorxiv.org/content/10.1101/742965v1.abstract" target="_blank" rel="noopener">Preprint</a></div>
+        </div>
+      </div>
+      <div class="highlight">
+        <div class="highlight-year mono">2020</div>
+        <div>
+          <p class="highlight-blurb">A review of how to actually estimate recombination rate variation</p>
+          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Wolf, J.B.W. (2020) "From molecules to populations: appreciating and estimating recombination rate variation" <span class="journal">Nature Reviews Genetics</span> 1–17</p>
+          <div class="highlight-links"><a href="https://www.nature.com/articles/s41576-020-0240-1" target="_blank" rel="noopener">Article</a></div>
+        </div>
+      </div>
+      <div class="highlight">
+        <div class="highlight-year mono">2019</div>
+        <div>
+          <p class="highlight-blurb">Showed gene flow history is hidden by current-day geography in Australian birds</p>
+          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Joseph, L., Moritz, C. (2019) "Current geography masks dynamic history of gene flow during speciation in northern Australian birds" <span class="journal">Molecular Ecology</span></p>
+          <div class="highlight-links"><a href="https://doi.org/10.1111/mec.14978" target="_blank" rel="noopener">Article</a><a href="https://www.biorxiv.org/content/early/2017/08/20/178475" target="_blank" rel="noopener">Preprint</a></div>
+        </div>
+      </div>
+      <div class="highlight">
+        <div class="highlight-year mono">2022</div>
+        <div>
+          <p class="highlight-blurb">Co-authored a field-wide call for equitable practice in biology fieldwork</p>
+          <p class="highlight-cite">Ramírez-Castañeda, V. et al., incl. <b>Peñalba, J.V.</b> (2022) "A set of principles and practical suggestions for equitable fieldwork in biology" <span class="journal">PNAS</span> 119(34), e2122667119</p>
+          <div class="highlight-links"><a href="https://www.pnas.org/doi/full/10.1073/pnas.2122667119" target="_blank" rel="noopener">Article</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>All publications</h2>
+      <span class="section-count mono">2014–2022</span>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2022</div>
+      <div class="pub-item">
+        <span class="pub-tag first mono">First author</span>
+        <p class="pub-cite"><b>Peñalba, J.V.</b>, Peters, J.L., Joseph, L. (2022) "Sustained plumage divergence despite weak genomic differentiation and broad sympatry in sister species of Australian woodswallows (<i>Artamus</i> spp.)" <span class="journal">Molecular Ecology</span> [<a href="https://onlinelibrary.wiley.com/doi/full/10.1111/mec.16637" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Ramírez-Castañeda, V. et al., incl. <b>Peñalba, J.V.</b> (2022) "A set of principles and practical suggestions for equitable fieldwork in biology" <span class="journal">PNAS</span> 119(34), e2122667119 [<a href="https://www.pnas.org/doi/full/10.1073/pnas.2122667119" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2021</div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">McEntee, J.P., Zhelezov, G., Werema, C. et al., incl. <b>Peñalba, J.V.</b> (2021) "Punctuated evolution in the learned songs of African sunbirds" <span class="journal">Proceedings of the Royal Society B</span> 288(1963), 20212062 [<a href="https://royalsocietypublishing.org/doi/full/10.1098/rspb.2021.2062" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Metzler, D., Knief, U., <b>Peñalba, J.V.</b>, Wolf, J.B.W. (2021) "Assortative mating and epistatic mating-trait architecture induce complex movement of the crow hybrid zone" <span class="journal">Evolution</span> 75(12), 3154–3174 [<a href="https://onlinelibrary.wiley.com/doi/full/10.1111/evo.14386" target="_blank" rel="noopener">link</a>] [<a href="https://www.biorxiv.org/content/10.1101/2020.03.10.985333v4.abstract" target="_blank" rel="noopener">preprint</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Cockburn, A., <b>Peñalba, J.V.</b>, Jaccoud, D. et al. (2020) "HIPHOP: Improved paternity assignment among close relatives using a simple exclusion method for biallelic markers" <span class="journal">Molecular Ecology Resources</span> 21(6), 1850–1865 [<a href="https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13389" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2020</div>
+      <div class="pub-item">
+        <span class="pub-tag first mono">First author</span>
+        <p class="pub-cite"><b>Peñalba, J.V.</b>, Wolf, J.B.W. (2020) "From molecules to populations: appreciating and estimating recombination rate variation" <span class="journal">Nature Reviews Genetics</span> 1–17 [<a href="https://www.nature.com/articles/s41576-020-0240-1" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag first mono">First author</span>
+        <p class="pub-cite"><b>Peñalba, J.V.</b>, Deng, Y., Fang, Q., Joseph, L., Moritz, C., Cockburn, A. (2020) "Genome of an iconic Australian bird: Chromosome-scale assembly and linkage map of the superb fairy-wren (<i>Malurus cyaneus</i>)" <span class="journal">Molecular Ecology Resources</span> 20(2), 560–578 [<a href="https://onlinelibrary.wiley.com/doi/full/10.1111/1755-0998.13124" target="_blank" rel="noopener">link</a>] [<a href="https://www.biorxiv.org/content/10.1101/742965v1.abstract" target="_blank" rel="noopener">preprint</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Keighley, M.V., Langmore, N.E., <b>Peñalba, J.V.</b>, Heinsohn, R. (2020) "Modelling dispersal in a large parrot: a comparison of landscape resistance models with population genetics and vocal dialect patterns" <span class="journal">Landscape Ecology</span> 35, 129–144 [<a href="https://link.springer.com/article/10.1007/s10980-019-00938-0" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2019</div>
+      <div class="pub-item">
+        <span class="pub-tag first mono">First author</span>
+        <p class="pub-cite"><b>Peñalba, J.V.</b>, Joseph, L., Moritz, C. (2019) "Current geography masks dynamic history of gene flow during speciation in northern Australian birds" <span class="journal">Molecular Ecology</span> [<a href="https://doi.org/10.1111/mec.14978" target="_blank" rel="noopener">link</a>] [<a href="https://www.biorxiv.org/content/early/2017/08/20/178475" target="_blank" rel="noopener">preprint</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Keighley, M.V., Heinsohn, R., Langmore, N.E., Murphy, S.A., <b>Peñalba, J.V.</b> (2019) "Genomic population structure aligns with vocal dialects in Palm Cockatoos (<i>Probosciger aterrimus</i>); evidence for refugial late-Quaternary distribution?" <span class="journal">Emu – Austral Ornithology</span> 119(1), 24–37 [<a href="https://www.tandfonline.com/doi/abs/10.1080/01584197.2018.1483731" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2017</div>
+      <div class="pub-item">
+        <span class="pub-tag first mono">First author</span>
+        <p class="pub-cite"><b>Peñalba, J.V.</b>, Mason, I.J., Schodde, R., Moritz, C., Joseph, L. (2017) "Characterizing divergence through three adjacent Australian avian transition zones" <span class="journal">Journal of Biogeography</span> 44(10), 2247–2258 [<a href="http://onlinelibrary.wiley.com/doi/10.1111/jbi.13048/full" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2016</div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">McEntee, J.P., <b>Peñalba, J.V.</b>, Werema, C. et al. (2016) "Social selection parapatry in an Afrotropical sunbird" <span class="journal">Evolution</span> 70(6), 1307–1321 [<a href="http://onlinelibrary.wiley.com/doi/10.1111/evo.12950/full" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Voelker, G., Huntley, J.W., <b>Peñalba, J.V.</b>, Bowie, R.C.K. (2016) "Resolving taxonomic uncertainty and historical biogeographic patterns in <i>Muscicapa</i> flycatchers and their allies" <span class="journal">Molecular Phylogenetics and Evolution</span> 94, 618–625 [<a href="http://www.sciencedirect.com/science/article/pii/S1055790315003024" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2015</div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Schweizer, M., Wright, T.F., <b>Peñalba, J.V.</b>, Schirtzinger, E.E., Joseph, L. (2015) "Molecular phylogenetics suggests a New Guinean origin and frequent episodes of founder-event speciation in the nectarivorous lories and lorikeets (Aves: Psittaciformes)" <span class="journal">Molecular Phylogenetics and Evolution</span> 90, 34–48 [<a href="http://www.sciencedirect.com/science/article/pii/S1055790315001232" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+    <div class="pub-year-group">
+      <div class="pub-year">2014</div>
+      <div class="pub-item">
+        <span class="pub-tag first mono">First author</span>
+        <p class="pub-cite"><b>Peñalba, J.V.</b>, Smith, L.L., Tonione, M.A. et al. (2014) "Sequence capture using PCR-generated probes: a cost-effective method of targeted high-throughput sequencing for nonmodel organisms" <span class="journal">Molecular Ecology Resources</span> 14(5), 1000–1010 [<a href="http://onlinelibrary.wiley.com/doi/10.1111/1755-0998.12249/full" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+      <div class="pub-item">
+        <span class="pub-tag co mono">Co-author</span>
+        <p class="pub-cite">Voelker, G., <b>Peñalba, J.V.</b>, Huntley, J.W., Bowie, R.C.K. (2014) "Diversification in an Afro-Asian songbird clade (<i>Erythropygia</i>–<i>Copsychus</i>) reveals founder-event speciation via trans-oceanic dispersals and a southern to northern colonization pattern in Africa" <span class="journal">Molecular Phylogenetics and Evolution</span> 73, 97–105 [<a href="http://www.sciencedirect.com/science/article/pii/S1055790314000372" target="_blank" rel="noopener">link</a>]</p>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer id="site-footer">
+  <div class="wrap">
+    <a class="contact-link" href="mailto:hello@joshuapenalba.com">Get in touch →</a>
+    <p class="foot-note mono">© Joshua Peñalba — Berlin, Germany</p>
+  </div>
+</footer>
+
+<script>
+  const btn = document.getElementById('menuBtn');
+  const nav = document.getElementById('mobileNav');
+  btn.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+  });
+  nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => nav.classList.remove('open')));
+</script>
+
+</body>
+</html>
