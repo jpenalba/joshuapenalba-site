@@ -83,7 +83,16 @@
     border-top: 1px solid var(--line);
   }
   .highlight:first-child{ border-top:none; padding-top:0; }
-  .highlight-year{ font-size: 0.78rem; color: var(--ink-faint); padding-top:3px; }
+  .highlight-marker{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .highlight-icon{
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .highlight-year{ font-size: 0.78rem; color: var(--ink-faint); }
   .highlight-blurb{
     font-family:'Manrope', sans-serif;
     font-size: 1.02rem;
@@ -102,6 +111,7 @@
 
   @media (max-width:560px){
     .highlight{ grid-template-columns: 1fr; gap:6px; }
+    .highlight-marker{ flex-direction:row; margin-bottom: 6px; }
   }
 
   /* ---------- full list ---------- */
@@ -184,7 +194,18 @@
     </div>
     <div class="highlight-list">
       <div class="highlight">
-        <div class="highlight-year mono">2020</div>
+        <div class="highlight-marker">
+          <div class="highlight-icon" title="Superb fairywren">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <circle cx="12" cy="21" r="5.2" stroke="var(--accent)" stroke-width="1.6"/>
+              <circle cx="7.5" cy="12.5" r="2.6" stroke="var(--accent)" stroke-width="1.6"/>
+              <path d="M5.3 11.3l-2.8-.6" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M15.5 17.5L21 5" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M19.3 8.2l1.4-2.9M21.7 9l1-3.3" stroke="var(--accent-2)" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="highlight-year mono">2020</div>
+        </div>
         <div>
           <p class="highlight-blurb">Built the first chromosome-scale genome for the superb fairywren</p>
           <p class="highlight-cite"><b>Peñalba, J.V.</b>, Deng, Y., Fang, Q., Joseph, L., Moritz, C., Cockburn, A. (2020) "Genome of an iconic Australian bird: Chromosome-scale assembly and linkage map of the superb fairy-wren (<i>Malurus cyaneus</i>)" <span class="journal">Molecular Ecology Resources</span> 20(2), 560–578</p>
@@ -192,7 +213,15 @@
         </div>
       </div>
       <div class="highlight">
-        <div class="highlight-year mono">2020</div>
+        <div class="highlight-marker">
+          <div class="highlight-icon" title="Recombination">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <path d="M5 11h6l10 10h6" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M5 21h6l10-10h6" stroke="var(--accent-2)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="highlight-year mono">2020</div>
+        </div>
         <div>
           <p class="highlight-blurb">A review of how to actually estimate recombination rate variation</p>
           <p class="highlight-cite"><b>Peñalba, J.V.</b>, Wolf, J.B.W. (2020) "From molecules to populations: appreciating and estimating recombination rate variation" <span class="journal">Nature Reviews Genetics</span> 1–17</p>
@@ -200,19 +229,36 @@
         </div>
       </div>
       <div class="highlight">
-        <div class="highlight-year mono">2019</div>
+        <div class="highlight-marker">
+          <div class="highlight-icon" title="Hybridization">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <circle cx="11" cy="16" r="6.5" stroke="var(--accent)" stroke-width="1.4"/>
+              <circle cx="21" cy="16" r="6.5" stroke="var(--accent-2)" stroke-width="1.4"/>
+            </svg>
+          </div>
+          <div class="highlight-year mono">2024</div>
+        </div>
         <div>
-          <p class="highlight-blurb">Showed gene flow history is hidden by current-day geography in Australian birds</p>
-          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Joseph, L., Moritz, C. (2019) "Current geography masks dynamic history of gene flow during speciation in northern Australian birds" <span class="journal">Molecular Ecology</span></p>
-          <div class="highlight-links"><a href="https://doi.org/10.1111/mec.14978" target="_blank" rel="noopener">Article</a><a href="https://www.biorxiv.org/content/early/2017/08/20/178475" target="_blank" rel="noopener">Preprint</a></div>
+          <p class="highlight-blurb">Reviewed the role of hybridization in forming and sustaining species</p>
+          <p class="highlight-cite"><b>Peñalba, J.V.</b>, Runemark, A., Meier, J.I., Singh, P., Wogan, G.O.U. et al. (2024) "The role of hybridization in species formation and persistence" <span class="journal">Cold Spring Harbor Perspectives in Biology</span> 16(12), a041445</p>
+          <div class="highlight-links"><a href="https://cshperspectives.cshlp.org/content/16/12/a041445" target="_blank" rel="noopener">Article</a></div>
         </div>
       </div>
       <div class="highlight">
-        <div class="highlight-year mono">2022</div>
+        <div class="highlight-marker">
+          <div class="highlight-icon" title="Suture zone">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <path d="M16 6a10 10 0 0 0 0 20" stroke="var(--accent)" stroke-width="1.4"/>
+              <path d="M16 6a10 10 0 0 1 0 20" stroke="var(--accent-2)" stroke-width="1.4"/>
+              <path d="M16 6v3l3 2-5 3 5 3-5 3 5 3-5 3 3 2v3" stroke="var(--ink-soft)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="highlight-year mono">2025</div>
+        </div>
         <div>
-          <p class="highlight-blurb">Co-authored a field-wide call for equitable practice in biology fieldwork</p>
-          <p class="highlight-cite">Ramírez-Castañeda, V. et al., incl. <b>Peñalba, J.V.</b> (2022) "A set of principles and practical suggestions for equitable fieldwork in biology" <span class="journal">PNAS</span> 119(34), e2122667119</p>
-          <div class="highlight-links"><a href="https://www.pnas.org/doi/full/10.1073/pnas.2122667119" target="_blank" rel="noopener">Article</a></div>
+          <p class="highlight-blurb">Reframed suture zones as a comparative tool for studying speciation</p>
+          <p class="highlight-cite">Wait, D.R., <b>Peñalba, J.V.</b> (2025) "Suture zones, speciation, and evolution" <span class="journal">Evolution</span> 79(3), 329–341</p>
+          <div class="highlight-links"><a href="https://doi.org/10.1093/evolut/qpae184" target="_blank" rel="noopener">Article</a></div>
         </div>
       </div>
     </div>
