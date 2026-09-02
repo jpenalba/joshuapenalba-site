@@ -337,14 +337,14 @@
     height: 130px;
     border-radius: 10px;
     background: var(--bg-raised);
-    border: 1px dashed var(--line-strong);
+    border: 1px solid var(--line);
+    overflow: hidden;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size: 0.62rem;
-    color: var(--ink-faint);
     flex-shrink:0;
   }
+  .research-icon img{ width:100%; height:100%; object-fit:cover; display:block; }
   .research-row h3{
     font-family:'Manrope', sans-serif;
     font-size: 1.08rem;
@@ -357,8 +357,8 @@
     margin:0;
   }
   @media (max-width: 560px){
-    .research-row{ grid-template-columns: 90px 1fr; gap: 14px; }
-    .research-icon{ width: 90px; height: 90px; }
+    .research-row{ grid-template-columns: 1fr; gap: 14px; }
+    .research-icon{ width: 100%; height: auto; aspect-ratio: 1 / 1; }
   }
 
   /* ---------- people ---------- */
@@ -392,6 +392,12 @@
     color: var(--ink-soft);
     margin:0;
   }
+  .person-dates{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--ink-faint);
+    margin: 2px 0 0;
+  }
 
   /* ---------- contact section ---------- */
   .contact-grid{
@@ -402,7 +408,7 @@
   }
   .contact-details{ display:flex; flex-direction:column; gap: 20px; }
   .contact-row{ display:flex; flex-direction:column; gap: 4px; }
-  .cibd-logo{ width: 180px; height: auto; margin-top: 2px; }
+  .cibd-logo{ width: 135px; height: auto; margin-top: 2px; }
   .contact-label{
     font-size: 0.68rem;
     color: var(--ink-faint);
@@ -526,21 +532,21 @@
     </div>
     <div class="research-rows">
       <div class="research-row">
-        <div class="research-icon mono">IMAGE</div>
+        <div class="research-icon"><img src="research-hybrid-speciation.jpg" alt="Illustration of two birds of different colors facing each other with a DNA helix between them"></div>
         <div>
           <h3>Hybridization and speciation genomics</h3>
           <p>Hybrid zones have been described as a &ldquo;natural window into the evolutionary process.&rdquo; They allow researchers to observe which genes move freely across a zone of contact and which are restricted, generating hypotheses about the genetic basis of speciation. Co-distributed hybrid zones, or &ldquo;suture zones,&rdquo; offer a comparative approach for understanding how differences in natural history and ecology shape speciation within a shared geographic context. Here, we often use birds and beetles as study systems to investigate the interplay between divergence and gene flow through the speciation process.</p>
         </div>
       </div>
       <div class="research-row">
-        <div class="research-icon mono">IMAGE</div>
+        <div class="research-icon"><img src="research-popgen.jpg" alt="Illustration of a map of Europe with three sampling localities connected by dashed lines"></div>
         <div>
           <h3>Population genomics and biogeography</h3>
           <p>A species can be thought of as a network of interconnected populations situated in geographic space. Biogeographic barriers, environmental context, and their change over geologic time shape demographic history, genetic diversity, population structure, divergence, and gene flow — and in turn, genotype, phenotype, and the capacity of populations to adapt to a changing environment. Here, we use birds, mammals, and pollinator species as study systems to investigate how geography and history shape the genetic makeup of species.</p>
         </div>
       </div>
       <div class="research-row">
-        <div class="research-icon mono">IMAGE</div>
+        <div class="research-icon"><img src="research-museomics.jpg" alt="Illustration of a museum specimen beetle with a syringe and DNA extraction vials"></div>
         <div>
           <h3>Museomics and genomic methods</h3>
           <p>Museum vouchers contain a wealth of genetic information, but the DNA they preserve is typically degraded, difficult to access, and challenging to analyze. Part of our work involves testing and optimizing molecular protocols for extracting DNA from museum specimens, and developing pipelines to analyze the resulting data. The approach is often specific to the taxon, preservation method, and research question at hand, but it opens the study of extinct species, taxa that are otherwise difficult to sample, and genetic snapshots from a historical time point. Here, we have used birds, mammals, insects, coral, shrimp, and many other taxa as study systems. Beyond museomics, we are also interested in developing, optimizing, and testing molecular and bioinformatic methods more broadly, to expand our capacity to address a wider range of evolutionary questions.</p>
@@ -552,18 +558,14 @@
   <section id="people">
     <div class="section-head">
       <h2>People</h2>
-      <span class="section-count mono">2</span>
+      <span class="section-count mono">1</span>
     </div>
     <div class="people-grid">
       <div class="person-card">
         <div class="person-photo mono">PHOTO</div>
-        <p class="person-name">Name here</p>
-        <p class="person-role">Role · started year</p>
-      </div>
-      <div class="person-card">
-        <div class="person-photo mono">PHOTO</div>
-        <p class="person-name">Name here</p>
-        <p class="person-role">Role · started year</p>
+        <p class="person-name">Linda Hagberg</p>
+        <p class="person-role">PhD Candidate</p>
+        <p class="person-dates">2025 - present</p>
       </div>
     </div>
   </section>
