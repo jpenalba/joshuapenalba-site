@@ -449,7 +449,7 @@
 
   /* custom pin badge showing the MfN logo */
   .mfn-pin-inner{
-    width: 56px; height: 40px;
+    width: 73px; height: 52px;
     border-radius: 8px;
     background: #fff;
     border: 3px solid var(--bg);
@@ -539,14 +539,14 @@
         </div>
       </div>
       <div class="research-row">
-        <div class="research-icon"><img src="research-popgen.jpg" alt="Illustration of a map of Europe with three sampling localities connected by dashed lines"></div>
+        <div class="research-icon"><img src="research-museomics.jpg" alt="Illustration of a museum specimen beetle with a syringe and DNA extraction vials"></div>
         <div>
           <h3>Population genomics and biogeography</h3>
           <p>A species can be thought of as a network of interconnected populations situated in geographic space. Biogeographic barriers, environmental context, and their change over geologic time shape demographic history, genetic diversity, population structure, divergence, and gene flow — and in turn, genotype, phenotype, and the capacity of populations to adapt to a changing environment. Here, we use birds, mammals, and pollinator species as study systems to investigate how geography and history shape the genetic makeup of species.</p>
         </div>
       </div>
       <div class="research-row">
-        <div class="research-icon"><img src="research-museomics.jpg" alt="Illustration of a museum specimen beetle with a syringe and DNA extraction vials"></div>
+        <div class="research-icon"><img src="research-popgen.jpg" alt="Illustration of a map of Europe with three sampling localities connected by dashed lines"></div>
         <div>
           <h3>Museomics and genomic methods</h3>
           <p>Museum vouchers contain a wealth of genetic information, but the DNA they preserve is typically degraded, difficult to access, and challenging to analyze. Part of our work involves testing and optimizing molecular protocols for extracting DNA from museum specimens, and developing pipelines to analyze the resulting data. The approach is often specific to the taxon, preservation method, and research question at hand, but it opens the study of extinct species, taxa that are otherwise difficult to sample, and genetic snapshots from a historical time point. Here, we have used birds, mammals, insects, coral, shrimp, and many other taxa as study systems. Beyond museomics, we are also interested in developing, optimizing, and testing molecular and bioinformatic methods more broadly, to expand our capacity to address a wider range of evolutionary questions.</p>
@@ -656,8 +656,8 @@
   const pinIcon = L.divIcon({
     className: 'mfn-pin',
     html: '<div class="mfn-pin-inner"><img src="mfn-logo.png" alt="Museum für Naturkunde logo"></div>',
-    iconSize: [56, 40],
-    iconAnchor: [28, 20]
+    iconSize: [73, 52],
+    iconAnchor: [36, 26]
   });
   L.marker(mfnCoords, { icon: pinIcon }).addTo(map);
 </script>
