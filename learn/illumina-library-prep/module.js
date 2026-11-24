@@ -218,15 +218,15 @@
         <h2>${step.title}</h2>
       </div>
       <p class="step-caption">${step.caption}</p>
-      <div class="stage-card">
-        <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
-        ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
-      </div>
-      <div class="step-data-row">
+      <div class="step-visual">
+        <div class="stage-card">
+          <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
+          ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
+        </div>
         <div class="data-panel">
           <svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>
+          <div class="step-widgets"></div>
         </div>
-        <div class="step-widgets"></div>
       </div>
     `;
     container.appendChild(section);
