@@ -81,52 +81,49 @@
 
   .scope-note{ font-size: 0.82rem; color: var(--ink-faint); border-left: 2px solid var(--line-strong); padding-left: 12px; margin: 0 0 32px; max-width: 60ch; }
 
-  /* ---------- module grid: stage + data panel ---------- */
-  .module-grid{ display:grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
-  @media (max-width: 860px){ .module-grid{ grid-template-columns: 1fr; } }
+  /* ---------- steps: one big section per step, scroll to move between them ---------- */
+  #stepsContainer{ display:flex; flex-direction:column; }
+  .step{
+    padding: 36px 0 44px; border-top: 1px solid var(--line);
+    opacity: 0; transform: translateY(18px);
+  }
+  .step:first-child{ border-top:none; padding-top:0; }
+  .step.is-visible{ opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce){ .step{ opacity:1; transform:none; } }
+
+  .step-head{ display:flex; align-items:baseline; gap: 12px; margin-bottom: 6px; flex-wrap:wrap; }
+  .step-eyebrow{ font-size: 0.74rem; color: var(--ink-faint); }
+  .step-head h2{ font-family:'Manrope', sans-serif; font-size: 1.3rem; font-weight:700; margin:0; }
+  .step-caption{ color: var(--ink-soft); max-width: 68ch; margin: 0 0 20px; font-size: 1.02rem; }
 
   .stage-card{
-    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 14px;
-    padding: 16px; overflow: hidden;
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px; overflow: hidden; margin-bottom: 18px;
   }
-  #stage{ width: 100%; height: auto; display:block; }
-  .region-info{ min-height: 1.4em; font-size: 0.86rem; color: var(--ink-soft); margin: 10px 2px 0; }
+  .step-stage{ width: 100%; height: auto; display:block; }
+  .region-info{ min-height: 1.5em; font-size: 0.9rem; color: var(--ink-soft); margin: 12px 2px 0; text-align:center; }
   .dna-region-hit{ cursor: pointer; }
   .dna-region-hit:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .step-data-row{ display:grid; grid-template-columns: 1.1fr 1fr; gap: 20px; align-items:start; }
+  @media (max-width: 640px){ .step-data-row{ grid-template-columns: 1fr; } }
 
   .data-panel{
     background: var(--bg-raised); border: 1px solid var(--line); border-radius: 14px;
     padding: 16px; display:flex; flex-direction:column; gap: 14px;
   }
-  #traceSvg{ width:100%; height:auto; display:block; }
+  .step-trace{ width:100%; height:auto; display:block; }
+  .step-widgets:empty{ display:none; }
   .qc-row, .pool-row{ display:flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); font-size: 0.86rem; }
   .qc-row:last-child, .pool-row:last-child{ border-bottom:none; }
   .qc-key{ color: var(--ink-faint); }
   .pool-swatch{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; vertical-align:middle; }
   .bead-label{ display:block; font-size: 0.78rem; color: var(--ink-soft); margin: 6px 0 2px; }
-  #beadBox input[type="range"]{ width: 100%; }
-  #sizeMarkerBox{ font-size: 0.88rem; color: var(--ink-soft); }
-  #pcrBox{ font-size: 0.86rem; color: var(--ink-soft); }
+  .bead-widget input[type="range"]{ width: 100%; }
+  .size-marker-widget{ font-size: 0.92rem; color: var(--ink-soft); align-self:center; }
+  .pcr-widget{ font-size: 0.88rem; color: var(--ink-soft); align-self:center; }
 
-  /* ---------- player controls ---------- */
-  #player{ margin-top: 20px; }
-  .lp-caption{ font-size: 1rem; min-height: 3.2em; margin: 0 0 14px; }
-  .lp-controls{ display:flex; align-items:center; gap: 10px; flex-wrap: wrap; }
-  .lp-btn{
-    display:flex; align-items:center; justify-content:center; width: 36px; height: 36px;
-    border: 1px solid var(--line-strong); border-radius: 50%; background: var(--bg);
-    color: var(--ink); cursor:pointer;
-  }
-  .lp-btn:hover{ border-color: var(--accent); color: var(--accent); }
-  .lp-btn:disabled{ opacity: 0.35; cursor: default; }
-  .lp-btn:disabled:hover{ border-color: var(--line-strong); color: var(--ink); }
-  .lp-btn-play{ background: var(--accent); color: #fff; border-color: var(--accent); }
-  .lp-track{ display:flex; gap: 6px; flex: 1; flex-wrap: wrap; }
-  .lp-dot{ width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); cursor:pointer; padding:0; }
-  .lp-dot:hover{ border-color: var(--accent); }
-  .lp-dot.is-current{ background: var(--accent); border-color: var(--accent); }
-
-  .licence-note{ margin-top: 40px; font-size: 0.78rem; color: var(--ink-faint); }
+  .licence-note{ margin-top: 20px; font-size: 0.78rem; color: var(--ink-faint); }
   .licence-note a{ border-bottom: 1px solid var(--line-strong); text-decoration:none; }
 
   .foot-note{ margin-top: 20px; font-size: 0.76rem; color: var(--ink-faint); }
@@ -169,24 +166,9 @@
       <ul id="objectivesList"></ul>
     </div>
 
-    <p class="scope-note">This is a first-draft prototype of the default library-prep path. Branch toggles (tagmentation, PCR-free, indexing strategies), "break it" failure mode, and the glossary are planned next.</p>
+    <p class="scope-note">This is a first-draft prototype of the default library-prep path. Scroll to move between steps. Branch toggles (tagmentation, PCR-free, indexing strategies), "break it" failure mode, and the glossary are planned next.</p>
 
-    <div class="module-grid">
-      <div class="stage-card">
-        <svg id="stage" viewBox="0 0 640 200" role="img" aria-label="Animated diagram of the library molecule at the current step"></svg>
-        <p class="region-info" id="regionInfo"></p>
-      </div>
-      <div class="data-panel">
-        <svg id="traceSvg" viewBox="0 0 380 150" role="img" aria-label="Fragment size distribution for the current step"></svg>
-        <div id="qcBox" hidden></div>
-        <div id="beadBox" hidden></div>
-        <div id="pcrBox" hidden></div>
-        <div id="sizeMarkerBox" hidden></div>
-        <div id="poolBox" hidden></div>
-      </div>
-    </div>
-
-    <div id="player"></div>
+    <div id="stepsContainer"></div>
 
     <p class="licence-note">Content licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</p>
   </div>
@@ -200,7 +182,6 @@
 
 <script src="../vendor/gsap-3.12.5.min.js"></script>
 <script src="../shared/dna.js"></script>
-<script src="../shared/player.js"></script>
 <script src="module.js"></script>
 <script>
   const btn = document.getElementById('menuBtn');
