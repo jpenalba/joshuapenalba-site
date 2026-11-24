@@ -1,0 +1,87 @@
+{
+  "title": "Illumina library prep",
+  "subtitle": "From genomic DNA to a sequencer-ready library, one step at a time.",
+  "objectives": [
+    "Draw and label a finished Illumina library molecule.",
+    "Explain what each prep step does and why it is needed.",
+    "Name the main ways protocols differ and what each choice changes.",
+    "Recognise common library-prep failures from their QC signatures."
+  ],
+  "steps": [
+    {
+      "id": "step0",
+      "title": "Starting material",
+      "caption": "We start with high-molecular-weight genomic DNA from the sample.",
+      "trace": { "peaks": [ { "center": 900, "height": 1.0, "width": 70 } ] },
+      "qc": null
+    },
+    {
+      "id": "step1",
+      "title": "Input QC",
+      "caption": "Before anything else: how much DNA, how intact, how clean?",
+      "trace": { "peaks": [ { "center": 900, "height": 1.0, "width": 70 } ] },
+      "qc": { "concentration": "42 ng/µL", "integrity": "DIN 8.9", "a260_280": "1.87", "a260_230": "2.2" }
+    },
+    {
+      "id": "step2",
+      "title": "Fragmentation",
+      "caption": "DNA is sheared into fragments near the target insert size.",
+      "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
+      "qc": null
+    },
+    {
+      "id": "step3",
+      "title": "End repair",
+      "caption": "Shearing leaves messy ends; enzymes trim or fill them to blunt, phosphorylated ends.",
+      "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
+      "qc": null
+    },
+    {
+      "id": "step4",
+      "title": "A-tailing",
+      "caption": "A single A on each 3′ end lets adapters with a T overhang ligate, and stops fragments ligating to each other.",
+      "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
+      "qc": null
+    },
+    {
+      "id": "step5",
+      "title": "Adapter ligation",
+      "caption": "Adapters carry everything the sequencer needs: flow-cell binding sites, primer sites and indexes.",
+      "trace": { "peaks": [ { "center": 380, "height": 0.8, "width": 110 }, { "center": 125, "height": 0.18, "width": 20 } ] },
+      "qc": null
+    },
+    {
+      "id": "step6",
+      "title": "Bead clean-up / size selection",
+      "caption": "Magnetic beads remove leftover adapters and fragments that are too short or too long. The bead ratio sets the cut-off.",
+      "trace": { "peaks": [ { "center": 380, "height": 0.8, "width": 110 }, { "center": 125, "height": 0.18, "width": 20 } ] },
+      "beadSelect": { "defaultMin": 200, "defaultMax": 600 },
+      "qc": null
+    },
+    {
+      "id": "step7",
+      "title": "Library PCR",
+      "caption": "PCR completes or enriches full-length molecules and raises the yield. Each cycle adds bias.",
+      "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
+      "pcrCycles": 8,
+      "qc": null
+    },
+    {
+      "id": "step8",
+      "title": "Library QC",
+      "caption": "Check the size distribution and measure molarity by qPCR, which counts only molecules that can actually be sequenced.",
+      "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
+      "sizeMarkers": { "insert": 260, "library": 380 },
+      "qc": null
+    },
+    {
+      "id": "step9",
+      "title": "Pool, normalise, load",
+      "caption": "Libraries are pooled in equal amounts, denatured and loaded onto the flow cell.",
+      "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
+      "pool": { "samples": ["Sample A", "Sample B", "Sample C"], "shares": [0.34, 0.33, 0.33] },
+      "qc": null
+    }
+  ],
+  "nextModule": null
+}

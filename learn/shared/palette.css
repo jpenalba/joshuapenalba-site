@@ -1,0 +1,31 @@
+/*
+  Shared colour palette for Learn modules.
+  Region and base colours are fixed across every module (per spec §5) so the
+  library molecule stays recognisable when it reappears later (cluster
+  generation, sequencing by synthesis, demultiplexing).
+
+  Colours are drawn from the Okabe–Ito colour-blind-safe set. Region colours
+  are also identified with a one-letter badge in the SVG (not colour alone).
+*/
+:root{
+  /* adapter / primer-site regions, left -> right along the library molecule */
+  --reg-p5:     #0072B2;
+  --reg-i5:     #56B4E9;
+  --reg-read1:  #009E73;
+  --reg-insert: #C9C2B4;
+  --reg-read2:  #D55E00;
+  --reg-i7:     #CC79A7;
+  --reg-p7:     #E69F00;
+
+  /* base colours (future modules) */
+  --base-a: #009E73;
+  --base-c: #0072B2;
+  --base-g: #E69F00;
+  --base-t: #D55E00;
+
+  /* structural / state colours, independent of the above */
+  --mol-backbone: #4A4A46;
+  --mol-damaged:  #D55E00;
+  --mol-removed:  #C7C4B6;
+  --mol-highlight:#F0E442;
+}
