@@ -242,6 +242,7 @@
 
   // ---------- size-trace chart (static per step, plus optional bead shading) ----------
   const TRACE_W = 380, TRACE_H = 150, TRACE_PAD = 28;
+  const TRACE_VIEW_H = TRACE_H + 34; // extra room below the plot for larger axis labels
   function tracePathD(peaks) {
     const n = 160;
     const x = bp => TRACE_PAD + (bp / 1000) * (TRACE_W - TRACE_PAD * 2);
@@ -261,9 +262,9 @@
   function buildTrace(svg, peaks) {
     DNA.el('line', { x1: TRACE_PAD, y1: TRACE_H - TRACE_PAD, x2: TRACE_W - TRACE_PAD, y2: TRACE_H - TRACE_PAD, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
     [0, 250, 500, 750, 1000].forEach(bp => {
-      DNA.el('text', { x: bpToX(bp), y: TRACE_H - TRACE_PAD + 16, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 9, fill: 'var(--ink-faint)' }, svg).textContent = bp;
+      DNA.el('text', { x: bpToX(bp), y: TRACE_H + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 16, fill: 'var(--ink-soft)' }, svg).textContent = bp;
     });
-    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H - 4, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 9, fill: 'var(--ink-faint)' }, svg).textContent = 'fragment size (bp)';
+    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 33, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = 'fragment size (bp)';
     const path = DNA.el('path', { d: tracePathD(peaks), fill: 'var(--accent)', opacity: 0.22, stroke: 'var(--accent)', 'stroke-width': 1.6 }, svg);
     return path;
   }
@@ -321,7 +322,7 @@
           ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
         </div>
         <div class="data-panel">
-          ${step.trace ? `<svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
+          ${step.trace ? `<svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
           <div class="step-widgets"></div>
         </div>
       </div>

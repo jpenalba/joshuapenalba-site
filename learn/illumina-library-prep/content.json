@@ -34,13 +34,13 @@
           "id": "nanodrop",
           "label": "Spectrophotometry (NanoDrop)",
           "summary": "Shines UV light through a small sample droplet and measures how much is absorbed at 260 nm.",
-          "detail": "A drop of sample bridges two fibre-optic pedestals. Light at 260 nm, where nucleic acids absorb, and 280 nm, where proteins absorb, passes through the drop to a detector. It's fast and needs no reagents, but it measures all nucleic acids and contaminants together, so it tends to overestimate the DNA actually available to sequence."
+          "detail": "A drop of sample bridges two fibre-optic pedestals. Light at 260 nm, where nucleic acids absorb, and 280 nm, where proteins absorb, passes through the drop to a detector. The A260/280 ratio flags protein contamination — a value near 1.8 is considered clean DNA, and lower values suggest leftover protein. The A260/230 ratio flags contamination from salts, phenol and other extraction reagents — clean DNA is usually between about 2.0 and 2.2. That makes it a useful, reagent-free first look at how much contaminant is in a sample, but it measures all nucleic acids and contaminants together, so it tends to overestimate the DNA actually available to sequence."
         },
         {
           "id": "qubit",
           "label": "Fluorometry (Qubit)",
           "summary": "Uses a dye that only lights up once bound to double-stranded DNA, then measures that glow.",
-          "detail": "The sample is mixed with a dye that fluoresces only once bound to double-stranded DNA. A targeted light source excites the dye, and a detector measures the emitted fluorescence, which scales with dsDNA concentration. It's more specific than a spectrophotometer — RNA, single-stranded DNA and contaminants aren't counted — but it needs reagents and standards for every run."
+          "detail": "The sample is mixed with a dye that fluoresces only once bound to double-stranded DNA. A targeted light source excites the dye, and a detector measures the emitted fluorescence, which scales with dsDNA concentration. Because it only reports double-stranded DNA — not RNA, single-stranded DNA or contaminants — it's the more accurate method for estimating how much DNA you actually have, so its values are the ones to use when quantifying DNA for library prep."
         }
       ]
     },
