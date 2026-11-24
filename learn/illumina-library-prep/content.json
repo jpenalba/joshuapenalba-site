@@ -47,8 +47,22 @@
     {
       "id": "step2",
       "title": "Fragmentation",
-      "caption": "DNA is sheared into fragments near the target insert size.",
+      "caption": "DNA is sheared into the intended target size. The more intact the DNA, the more shearing needs to occur.",
       "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
+      "fragMethods": [
+        {
+          "id": "sonication",
+          "label": "Sonication",
+          "summary": "Focused ultrasonic waves shear DNA through rapid bubble formation and collapse.",
+          "detail": "A probe or ultrasonic bath generates high-frequency sound waves in the sample, forming microscopic bubbles that collapse violently (cavitation) and physically shear the DNA. Power, duration and number of cycles set the target fragment size. It gives fairly random, reproducible breakpoints and a tunable size distribution, but needs dedicated equipment (e.g. a Covaris instrument) and can heat the sample if not controlled."
+        },
+        {
+          "id": "enzymatic",
+          "label": "Enzymatic shearing",
+          "summary": "A cocktail of enzymes nicks and cuts the DNA at semi-random sites.",
+          "detail": "A mix of enzymes — typically a nicking enzyme paired with a nuclease that cuts opposite each nick — fragments the DNA during a short, temperature-controlled incubation. It needs no specialised equipment beyond a thermocycler, and incubation time sets the fragment size, but the enzymes can show some sequence bias in where they cut."
+        }
+      ],
       "qc": null
     },
     {

@@ -88,6 +88,21 @@ const DNA = (() => {
     }, parent);
   }
 
+  // A freshly-sheared fragment: two strands drawn as separate bars, stacked
+  // with a small gap, each extending past the double-stranded core by its
+  // own amount at each end -- a 5'/3' overhang, rather than a single blunt
+  // bar. overhangs = { topLeft, topRight, bottomLeft, bottomRight } in px.
+  function fragmentOverhang(parent, { x, y, width, height = 7, gap = 5, color = 'var(--mol-backbone)', overhangs = {}, rx = 2.5 } = {}) {
+    const g = group(parent, { class: 'dna-fragment-overhang' });
+    const { topLeft = 0, topRight = 0, bottomLeft = 0, bottomRight = 0 } = overhangs;
+    const strandH = height;
+    const topY = y - gap / 2 - strandH;
+    const botY = y + gap / 2;
+    el('rect', { x: x - topLeft, y: topY, width: width + topLeft + topRight, height: strandH, rx, fill: color }, g);
+    el('rect', { x: x - bottomLeft, y: botY, width: width + bottomLeft + bottomRight, height: strandH, rx, fill: color }, g);
+    return g;
+  }
+
   // 5' phosphate marker.
   function phosphateDot(parent, { x, y, r = 4 } = {}) {
     const g = group(parent, { class: 'dna-phosphate' });
@@ -120,7 +135,7 @@ const DNA = (() => {
   }
 
   return {
-    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, phosphateDot, aTailDot, yAdapterOpen,
+    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, fragmentOverhang, phosphateDot, aTailDot, yAdapterOpen,
     REGIONS: {
       p5:    { key: 'p5',    label: 'P5', color: 'var(--reg-p5)' },
       i5:    { key: 'i5',    label: 'i5', color: 'var(--reg-i5)' },
