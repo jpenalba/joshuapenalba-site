@@ -56,10 +56,17 @@
     p7: 'P7 — binds the flow-cell surface at the other end.'
   };
 
+  // oh = the 5'/3' overhang left by shearing at each strand end, px --
+  // deliberately uneven and varied fragment-to-fragment (real shearing
+  // produces a range of overhang sizes, not one fixed kind).
   const SMEAR = [
-    { x: 70, y: 55, w: 110 }, { x: 230, y: 175, w: 75 }, { x: 470, y: 60, w: 135 },
-    { x: 545, y: 170, w: 90 }, { x: 95, y: 150, w: 80 }, { x: 560, y: 110, w: 100 },
-    { x: 300, y: 115, w: 150 }
+    { x: 70, y: 55, w: 110, oh: { topLeft: 4, topRight: 10, bottomLeft: 8, bottomRight: 3 } },
+    { x: 230, y: 175, w: 75, oh: { topLeft: 12, topRight: 2, bottomLeft: 3, bottomRight: 9 } },
+    { x: 470, y: 60, w: 135, oh: { topLeft: 2, topRight: 14, bottomLeft: 10, bottomRight: 4 } },
+    { x: 545, y: 170, w: 90, oh: { topLeft: 9, topRight: 5, bottomLeft: 2, bottomRight: 12 } },
+    { x: 95, y: 150, w: 80, oh: { topLeft: 6, topRight: 3, bottomLeft: 11, bottomRight: 6 } },
+    { x: 560, y: 110, w: 100, oh: { topLeft: 3, topRight: 11, bottomLeft: 5, bottomRight: 2 } },
+    { x: 300, y: 115, w: 150, oh: { topLeft: 10, topRight: 6, bottomLeft: 4, bottomRight: 13 } }
   ];
 
   // ---------- per-step stage drawing ----------
@@ -166,13 +173,96 @@
     captionLines(svg, ['Dye glows only', 'on dsDNA'], 115);
   }
 
+  function drawSonication(svg) {
+    DNA.el('rect', { x: 80, y: 6, width: 10, height: 36, fill: 'var(--line-strong)' }, svg);
+    DNA.el('path', { d: 'M80 42 L90 42 L87 55 L83 55 Z', fill: 'var(--line-strong)' }, svg);
+    [0, 1, 2, 3, 4].forEach(i => {
+      const a = (i / 4) * Math.PI + Math.PI;
+      DNA.el('line', {
+        x1: 85 + Math.cos(a) * 8, y1: 58 + Math.sin(a) * 6,
+        x2: 85 + Math.cos(a) * 18, y2: 58 + Math.sin(a) * 13,
+        stroke: 'var(--mol-highlight)', 'stroke-width': 1.8, opacity: 0.85
+      }, svg);
+    });
+    DNA.el('path', { d: 'M65 65 L65 92 Q65 102 85 102 Q105 102 105 92 L105 65 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2 }, svg);
+    DNA.el('path', { d: 'M67 82 L67 92 Q67 100 85 100 Q103 100 103 92 L103 82 Z', fill: 'var(--reg-read1)', opacity: 0.35 }, svg);
+    DNA.el('rect', { x: 72, y: 90, width: 10, height: 4, rx: 2, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('rect', { x: 86, y: 94, width: 8, height: 4, rx: 2, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('rect', { x: 95, y: 88, width: 7, height: 4, rx: 2, fill: 'var(--mol-backbone)' }, svg);
+    captionLines(svg, ['High-frequency sound', 'waves shear the DNA'], 118);
+  }
+
+  function drawEnzymatic(svg) {
+    [[20, 30], [58, 28], [94, 30], [132, 26]].forEach(([x, w]) => {
+      DNA.el('rect', { x, y: 56, width: w, height: 8, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    });
+    [53, 89, 127].forEach(x => {
+      DNA.el('circle', { cx: x, cy: 46, r: 8.5, fill: 'var(--reg-i7)' }, svg);
+      DNA.el('path', { d: `M${x} 46 L${x + 8.5} 46 A8.5 8.5 0 0 1 ${x} 54.5 Z`, fill: 'var(--bg-raised)' }, svg);
+      DNA.el('line', { x1: x, y1: 54, x2: x, y2: 60, stroke: 'var(--reg-i7)', 'stroke-width': 1.5, 'stroke-dasharray': '2 2' }, svg);
+    });
+    captionLines(svg, ['Enzymes nick and cut', 'DNA at semi-random sites'], 118);
+  }
+
+  const ILLUS_DRAWERS = { nanodrop: drawNanodrop, qubit: drawQubit, sonication: drawSonication, enzymatic: drawEnzymatic };
+
+  // Shared expandable "method" accordion used both for DNA-quantification
+  // methods (mounted in the data panel) and fragmentation methods (mounted
+  // in the stage card). Illustrations are drawn lazily, the first time a
+  // panel is opened.
+  function buildMethodAccordion(mount, methods, idPrefix) {
+    const acc = document.createElement('div');
+    acc.className = 'method-accordion';
+    methods.forEach(m => {
+      const item = document.createElement('div');
+      item.className = 'method-item';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'method-toggle';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.innerHTML = `<span class="method-chevron">›</span> ${m.label}`;
+      const panelId = `method-panel-${idPrefix}-${m.id}`;
+      btn.setAttribute('aria-controls', panelId);
+      const panel = document.createElement('div');
+      panel.className = 'method-panel';
+      panel.id = panelId;
+      panel.hidden = true;
+      panel.innerHTML = `
+        <svg class="method-illus" viewBox="0 0 170 135" role="img" aria-label="How ${m.label} works"></svg>
+        <p class="method-summary">${m.summary}</p>
+        <p class="method-detail">${m.detail}</p>
+      `;
+      btn.addEventListener('click', () => {
+        const willOpen = panel.hidden;
+        panel.hidden = !willOpen;
+        btn.setAttribute('aria-expanded', String(willOpen));
+        btn.classList.toggle('is-open', willOpen);
+        if (willOpen && !panel.dataset.drawn) {
+          const illusSvg = panel.querySelector('.method-illus');
+          const draw = ILLUS_DRAWERS[m.id];
+          if (draw) draw(illusSvg);
+          panel.dataset.drawn = '1';
+        }
+      });
+      item.appendChild(btn);
+      item.appendChild(panel);
+      acc.appendChild(item);
+    });
+    mount.appendChild(acc);
+    return acc;
+  }
+
   function drawSmear(svg, endStyle) {
     SMEAR.forEach(f => {
-      DNA.fragmentBar(svg, { x: f.x, y: f.y, width: f.w, height: 16, color: 'var(--mol-backbone)' });
       if (endStyle === 'ragged') {
-        DNA.raggedCap(svg, { x: f.x, y: f.y, side: 'left', size: 11 });
-        DNA.raggedCap(svg, { x: f.x + f.w, y: f.y, side: 'right', size: 11 });
-      } else if (endStyle === 'repaired' || endStyle === 'atail') {
+        // Freshly sheared: the two strands don't end at the same point, so
+        // each fragment gets its own 5'/3' overhangs instead of a single
+        // blunt bar.
+        DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height: 7, gap: 5, overhangs: f.oh });
+        return;
+      }
+      DNA.fragmentBar(svg, { x: f.x, y: f.y, width: f.w, height: 16, color: 'var(--mol-backbone)' });
+      if (endStyle === 'repaired' || endStyle === 'atail') {
         DNA.phosphateDot(svg, { x: f.x + 4, y: f.y - 11, r: 6 });
         DNA.phosphateDot(svg, { x: f.x + f.w - 4, y: f.y + 11, r: 6 });
       }
@@ -320,6 +410,7 @@
         <div class="stage-card">
           <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
           ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
+          ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
         </div>
         <div class="data-panel">
           ${step.trace ? `<svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
@@ -332,6 +423,7 @@
     const stageSvg = section.querySelector(`#${stageSvgId}`);
     const traceSvg = section.querySelector('.step-trace');
     const widgets = section.querySelector('.step-widgets');
+    const stageMethods = section.querySelector('.stage-methods');
 
     // --- stage ---
     if (step.id === 'step0') {
@@ -365,44 +457,10 @@
       ).join('');
     }
     if (step.quantMethods) {
-      const acc = document.createElement('div');
-      acc.className = 'quant-methods';
-      step.quantMethods.forEach(m => {
-        const item = document.createElement('div');
-        item.className = 'quant-item';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'quant-toggle';
-        btn.setAttribute('aria-expanded', 'false');
-        btn.innerHTML = `<span class="quant-chevron">›</span> ${m.label}`;
-        const panelId = `quant-panel-${step.id}-${m.id}`;
-        btn.setAttribute('aria-controls', panelId);
-        const panel = document.createElement('div');
-        panel.className = 'quant-panel';
-        panel.id = panelId;
-        panel.hidden = true;
-        panel.innerHTML = `
-          <svg class="quant-illus" viewBox="0 0 170 135" role="img" aria-label="How ${m.label} works"></svg>
-          <p class="quant-summary">${m.summary}</p>
-          <p class="quant-detail">${m.detail}</p>
-        `;
-        btn.addEventListener('click', () => {
-          const willOpen = panel.hidden;
-          panel.hidden = !willOpen;
-          btn.setAttribute('aria-expanded', String(willOpen));
-          btn.classList.toggle('is-open', willOpen);
-          if (willOpen && !panel.dataset.drawn) {
-            const illusSvg = panel.querySelector('.quant-illus');
-            if (m.id === 'nanodrop') drawNanodrop(illusSvg);
-            else if (m.id === 'qubit') drawQubit(illusSvg);
-            panel.dataset.drawn = '1';
-          }
-        });
-        item.appendChild(btn);
-        item.appendChild(panel);
-        acc.appendChild(item);
-      });
-      widgets.appendChild(acc);
+      buildMethodAccordion(widgets, step.quantMethods, step.id);
+    }
+    if (step.fragMethods) {
+      buildMethodAccordion(stageMethods, step.fragMethods, step.id);
     }
     if (step.beadSelect) {
       const min0 = step.beadSelect.defaultMin, max0 = step.beadSelect.defaultMax;
