@@ -19,8 +19,30 @@
       "id": "step1",
       "title": "Input QC",
       "caption": "Before anything else: how much DNA, how intact, how clean?",
-      "trace": { "peaks": [ { "center": 900, "height": 1.0, "width": 70 } ] },
-      "qc": { "concentration": "42 ng/µL", "integrity": "DIN 8.9", "a260_280": "1.87", "a260_230": "2.2" }
+      "trace": null,
+      "gel": {
+        "lanes": [
+          { "type": "ladder", "label": ["Ladder"] },
+          { "type": "intact", "label": ["High MW"] },
+          { "type": "moderate", "label": ["Moderate", "degradation"] },
+          { "type": "degraded", "label": ["Heavy", "degradation"] }
+        ]
+      },
+      "qc": { "concentration": "42 ng/µL", "integrity": "DIN 8.9", "a260_280": "1.87", "a260_230": "2.2" },
+      "quantMethods": [
+        {
+          "id": "nanodrop",
+          "label": "Spectrophotometry (NanoDrop)",
+          "summary": "Shines UV light through a small sample droplet and measures how much is absorbed at 260 nm.",
+          "detail": "A drop of sample bridges two fibre-optic pedestals. Light at 260 nm, where nucleic acids absorb, and 280 nm, where proteins absorb, passes through the drop to a detector. It's fast and needs no reagents, but it measures all nucleic acids and contaminants together, so it tends to overestimate the DNA actually available to sequence."
+        },
+        {
+          "id": "qubit",
+          "label": "Fluorometry (Qubit)",
+          "summary": "Uses a dye that only lights up once bound to double-stranded DNA, then measures that glow.",
+          "detail": "The sample is mixed with a dye that fluoresces only once bound to double-stranded DNA. A targeted light source excites the dye, and a detector measures the emitted fluorescence, which scales with dsDNA concentration. It's more specific than a spectrophotometer — RNA, single-stranded DNA and contaminants aren't counted — but it needs reagents and standards for every run."
+        }
+      ]
     },
     {
       "id": "step2",

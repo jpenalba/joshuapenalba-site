@@ -69,6 +69,103 @@
     DNA.genomicStrand(svg, { x: 40, width: STAGE_W - 80, y: 175, amplitude: 16, wavelength: 170, strokeWidth: 5, phase: 2.8 });
   }
 
+  // Gel electrophoresis of the raw input, before any library-prep steps.
+  // Smaller fragments migrate farther (down the gel) and faster, so intact
+  // high-molecular-weight DNA stays as a tight band near the well, while
+  // degraded DNA trails into a smear reaching further down the lane.
+  function drawGel(svg, gel) {
+    const GEL_X = 60, GEL_Y = 20, GEL_W = STAGE_W - 120, GEL_H = STAGE_H - 70;
+    const defs = DNA.el('defs', {}, svg);
+    const gradTop = DNA.el('linearGradient', { id: 'gelFadeTop', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    DNA.el('stop', { offset: '0%', 'stop-color': 'var(--gel-band)', 'stop-opacity': 0.55 }, gradTop);
+    DNA.el('stop', { offset: '100%', 'stop-color': 'var(--gel-band)', 'stop-opacity': 0 }, gradTop);
+    const gradLow = DNA.el('linearGradient', { id: 'gelFadeLow', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    DNA.el('stop', { offset: '0%', 'stop-color': 'var(--gel-band)', 'stop-opacity': 0 }, gradLow);
+    DNA.el('stop', { offset: '55%', 'stop-color': 'var(--gel-band)', 'stop-opacity': 0.5 }, gradLow);
+    DNA.el('stop', { offset: '100%', 'stop-color': 'var(--gel-band)', 'stop-opacity': 0.15 }, gradLow);
+
+    DNA.el('rect', { x: GEL_X, y: GEL_Y, width: GEL_W, height: GEL_H, rx: 10, fill: 'var(--gel-bg)' }, svg);
+
+    const lanes = gel.lanes;
+    const margin = 32;
+    const usable = GEL_W - margin * 2;
+    const laneW = Math.min(70, usable / lanes.length - 24);
+    const slot = usable / lanes.length;
+
+    lanes.forEach((lane, i) => {
+      const cx = GEL_X + margin + slot * i + slot / 2;
+      const lx = cx - laneW / 2;
+      const wellY = GEL_Y + 16;
+      DNA.el('rect', { x: lx, y: wellY, width: laneW, height: 9, rx: 2, fill: 'var(--gel-well)' }, svg);
+
+      const bandTop = wellY + 20;
+      if (lane.type === 'ladder') {
+        const rungs = 7;
+        for (let r = 0; r < rungs; r++) {
+          DNA.el('rect', {
+            x: lx, y: bandTop + r * ((GEL_H - 55) / rungs), width: laneW, height: 5, rx: 2,
+            fill: 'var(--gel-band)', opacity: 0.8
+          }, svg);
+        }
+      } else if (lane.type === 'intact') {
+        DNA.el('rect', { x: lx, y: bandTop, width: laneW, height: 10, rx: 3, fill: 'var(--gel-band)' }, svg);
+        DNA.el('rect', { x: lx, y: bandTop + 8, width: laneW, height: 26, fill: 'url(#gelFadeTop)' }, svg);
+      } else if (lane.type === 'moderate') {
+        DNA.el('rect', { x: lx, y: bandTop, width: laneW, height: 9, rx: 3, fill: 'var(--gel-band)', opacity: 0.6 }, svg);
+        DNA.el('rect', { x: lx, y: bandTop + 6, width: laneW, height: GEL_H - 80, fill: 'url(#gelFadeTop)' }, svg);
+      } else if (lane.type === 'degraded') {
+        DNA.el('rect', { x: lx, y: bandTop, width: laneW, height: GEL_H - 55, fill: 'url(#gelFadeLow)' }, svg);
+      }
+
+      lane.label.forEach((line, li) => {
+        DNA.el('text', {
+          x: cx, y: GEL_Y + GEL_H + 20 + li * 14, 'text-anchor': 'middle',
+          'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)'
+        }, svg).textContent = line;
+      });
+    });
+  }
+
+  // Both quant-method illustrations are drawn centred and stacked (icon on
+  // top, caption below) rather than icon-beside-label, since the side panel
+  // column is narrow — a side-by-side layout clips long labels there.
+  function captionLines(svg, lines, y0) {
+    lines.forEach((line, i) => {
+      DNA.el('text', {
+        x: 85, y: y0 + i * 13, 'text-anchor': 'middle',
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 10, fill: 'var(--ink-soft)'
+      }, svg).textContent = line;
+    });
+  }
+
+  function drawNanodrop(svg) {
+    DNA.el('circle', { cx: 85, cy: 14, r: 5, fill: 'none', stroke: 'var(--reg-p7)', 'stroke-width': 1.5 }, svg);
+    DNA.el('line', { x1: 85, y1: 19, x2: 85, y2: 40, stroke: 'var(--reg-p7)', 'stroke-width': 2, 'stroke-dasharray': '3 3' }, svg);
+    DNA.el('rect', { x: 60, y: 40, width: 50, height: 8, rx: 3, fill: 'var(--line-strong)' }, svg);
+    DNA.el('circle', { cx: 85, cy: 50, r: 6, fill: 'var(--reg-i5)' }, svg);
+    DNA.el('rect', { x: 60, y: 56, width: 50, height: 8, rx: 3, fill: 'var(--line-strong)' }, svg);
+    DNA.el('line', { x1: 85, y1: 64, x2: 85, y2: 86, stroke: 'var(--reg-p7)', 'stroke-width': 2, 'stroke-dasharray': '3 3' }, svg);
+    DNA.el('rect', { x: 70, y: 86, width: 30, height: 12, rx: 2, fill: 'none', stroke: 'var(--reg-p7)', 'stroke-width': 1.5 }, svg);
+    captionLines(svg, ['Absorbs UV light', 'at 260 & 280 nm'], 115);
+  }
+
+  function drawQubit(svg) {
+    DNA.el('path', { d: 'M72 18 L72 83 Q72 98 85 98 Q98 98 98 83 L98 18 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2 }, svg);
+    DNA.el('path', { d: 'M74 53 L74 83 Q74 95 85 95 Q96 95 96 83 L96 53 Z', fill: 'var(--reg-read1)', opacity: 0.5 }, svg);
+    [[80, 68], [89, 76], [83, 83], [92, 63]].forEach(([x, y]) => {
+      DNA.el('circle', { cx: x, cy: y, r: 2.2, fill: 'var(--mol-highlight)' }, svg);
+    });
+    [0, 1, 2].forEach(i => {
+      DNA.el('line', {
+        x1: 101 + i * 5, y1: 58 - i * 6, x2: 113 + i * 6, y2: 48 - i * 8,
+        stroke: 'var(--mol-highlight)', 'stroke-width': 1.5, opacity: 0.8
+      }, svg);
+    });
+    DNA.el('line', { x1: 48, y1: 63, x2: 66, y2: 63, stroke: 'var(--reg-p7)', 'stroke-width': 2 }, svg);
+    DNA.el('polygon', { points: '43,58 43,68 35,63', fill: 'var(--reg-p7)' }, svg);
+    captionLines(svg, ['Dye glows only', 'on dsDNA'], 115);
+  }
+
   function drawSmear(svg, endStyle) {
     SMEAR.forEach(f => {
       DNA.fragmentBar(svg, { x: f.x, y: f.y, width: f.w, height: 16, color: 'var(--mol-backbone)' });
@@ -224,7 +321,7 @@
           ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
         </div>
         <div class="data-panel">
-          <svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>
+          ${step.trace ? `<svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
           <div class="step-widgets"></div>
         </div>
       </div>
@@ -236,8 +333,10 @@
     const widgets = section.querySelector('.step-widgets');
 
     // --- stage ---
-    if (step.id === 'step0' || step.id === 'step1') {
+    if (step.id === 'step0') {
       drawGenomicBulk(stageSvg);
+    } else if (step.id === 'step1') {
+      drawGel(stageSvg, step.gel);
     } else if (step.id === 'step2') {
       drawSmear(stageSvg, 'ragged');
     } else if (step.id === 'step3') {
@@ -256,14 +355,55 @@
     }
 
     // --- trace ---
-    buildTrace(traceSvg, step.trace.peaks);
+    if (traceSvg) buildTrace(traceSvg, step.trace.peaks);
 
     // --- widgets ---
     if (step.qc) {
       widgets.innerHTML = Object.entries(step.qc).map(([k, v]) =>
         `<div class="qc-row"><span class="qc-key mono">${k.replace(/_/g, '/').toUpperCase()}</span><span class="qc-val mono">${v}</span></div>`
       ).join('');
-    } else if (step.beadSelect) {
+    }
+    if (step.quantMethods) {
+      const acc = document.createElement('div');
+      acc.className = 'quant-methods';
+      step.quantMethods.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'quant-item';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'quant-toggle';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.innerHTML = `<span class="quant-chevron">›</span> ${m.label}`;
+        const panelId = `quant-panel-${step.id}-${m.id}`;
+        btn.setAttribute('aria-controls', panelId);
+        const panel = document.createElement('div');
+        panel.className = 'quant-panel';
+        panel.id = panelId;
+        panel.hidden = true;
+        panel.innerHTML = `
+          <svg class="quant-illus" viewBox="0 0 170 135" role="img" aria-label="How ${m.label} works"></svg>
+          <p class="quant-summary">${m.summary}</p>
+          <p class="quant-detail">${m.detail}</p>
+        `;
+        btn.addEventListener('click', () => {
+          const willOpen = panel.hidden;
+          panel.hidden = !willOpen;
+          btn.setAttribute('aria-expanded', String(willOpen));
+          btn.classList.toggle('is-open', willOpen);
+          if (willOpen && !panel.dataset.drawn) {
+            const illusSvg = panel.querySelector('.quant-illus');
+            if (m.id === 'nanodrop') drawNanodrop(illusSvg);
+            else if (m.id === 'qubit') drawQubit(illusSvg);
+            panel.dataset.drawn = '1';
+          }
+        });
+        item.appendChild(btn);
+        item.appendChild(panel);
+        acc.appendChild(item);
+      });
+      widgets.appendChild(acc);
+    }
+    if (step.beadSelect) {
       const min0 = step.beadSelect.defaultMin, max0 = step.beadSelect.defaultMax;
       widgets.innerHTML = `
         <div class="bead-widget">

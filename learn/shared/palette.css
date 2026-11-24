@@ -28,4 +28,10 @@
   --mol-damaged:  #D55E00;
   --mol-removed:  #C7C4B6;
   --mol-highlight:#F0E442;
+
+  /* gel electrophoresis (future modules can reuse this) */
+  --gel-bg:   #1C1F1D;
+  --gel-well: #0E100F;
+  --gel-band: #8FE3A6;
+  --gel-band-dim: #4F7D5C;
 }
