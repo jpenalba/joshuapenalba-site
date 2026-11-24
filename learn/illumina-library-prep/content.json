@@ -47,7 +47,7 @@
     {
       "id": "step2",
       "title": "Fragmentation",
-      "caption": "DNA is sheared into the intended target size. The more intact the DNA, the more shearing needs to occur.",
+      "caption": "DNA is sheared into the intended target size. The more intact the DNA, the more shearing needs to occur. Ideally, all samples should have roughly the same size distribution.",
       "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
       "fragMethods": [
         {
@@ -61,6 +61,12 @@
           "label": "Enzymatic shearing",
           "summary": "A cocktail of enzymes nicks and cuts the DNA at semi-random sites.",
           "detail": "A mix of enzymes — typically a nicking enzyme paired with a nuclease that cuts opposite each nick — fragments the DNA during a short, temperature-controlled incubation. It needs no specialised equipment beyond a thermocycler, and incubation time sets the fragment size, but the enzymes can show some sequence bias in where they cut."
+        },
+        {
+          "id": "tagmentation",
+          "label": "Tagmentation",
+          "summary": "A transposase enzyme cuts the DNA and inserts sequencing adapters in the same step.",
+          "detail": "A transposase (commonly Tn5) loaded with adapter sequences simultaneously cuts the DNA and ligates an adapter at each cut site. Because fragmentation and adapter attachment happen together, it skips the separate end-repair and ligation steps entirely and needs very little input DNA — but the insertion sites aren't fully random, which can introduce some sequence bias, and it's more sensitive to getting the DNA-to-enzyme ratio right."
         }
       ],
       "qc": null

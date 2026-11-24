@@ -204,7 +204,17 @@
     captionLines(svg, ['Enzymes nick and cut', 'DNA at semi-random sites'], 118);
   }
 
-  const ILLUS_DRAWERS = { nanodrop: drawNanodrop, qubit: drawQubit, sonication: drawSonication, enzymatic: drawEnzymatic };
+  function drawTagmentation(svg) {
+    DNA.el('rect', { x: 25, y: 56, width: 45, height: 8, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('rect', { x: 100, y: 56, width: 45, height: 8, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('rect', { x: 68, y: 53, width: 13, height: 13, rx: 2, fill: 'var(--reg-p7)' }, svg);
+    DNA.el('rect', { x: 89, y: 53, width: 13, height: 13, rx: 2, fill: 'var(--reg-i7)' }, svg);
+    DNA.el('ellipse', { cx: 85, cy: 38, rx: 24, ry: 14, fill: 'var(--reg-read1)', opacity: 0.55 }, svg);
+    DNA.el('text', { x: 85, y: 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 10, fill: 'var(--ink)' }, svg).textContent = 'Tn5';
+    captionLines(svg, ['Cuts and tags DNA', 'in a single step'], 118);
+  }
+
+  const ILLUS_DRAWERS = { nanodrop: drawNanodrop, qubit: drawQubit, sonication: drawSonication, enzymatic: drawEnzymatic, tagmentation: drawTagmentation };
 
   // Shared expandable "method" accordion used both for DNA-quantification
   // methods (mounted in the data panel) and fragmentation methods (mounted
