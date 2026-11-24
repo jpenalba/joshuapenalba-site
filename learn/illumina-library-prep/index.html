@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Illumina library prep — Learn — Dr. Joshua Peñalba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/palette.css">
+<style>
+  :root{
+    --bg: #FAFAF7;
+    --bg-raised: #F3F2EC;
+    --ink: #17181A;
+    --ink-soft: #5C5F5B;
+    --ink-faint: #9A9C95;
+    --accent: #1F5C4D;
+    --accent-2: #3D4E8C;
+    --line: #DEDCD3;
+    --line-strong: #C7C4B6;
+    --max: 920px;
+    --dark-bg: #232320;
+    --dark-line: #3A3A36;
+    --dark-ink-soft: #B8B7AE;
+  }
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0; background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  a{ color: inherit; }
+  .mono{ font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.02em; }
+  .wrap{ max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- nav (same compact dark header as cv.html / publications.html) ---------- */
+  header{
+    background: var(--dark-bg); color: #F2F1EA;
+    border-bottom: 1px solid var(--dark-line);
+    position: sticky; top:0; z-index:50;
+  }
+  .nav-row{ display:flex; align-items:center; justify-content: space-between; padding: 16px 24px; max-width: var(--max); margin: 0 auto; }
+  .nav-mark{ font-family:'Manrope', sans-serif; font-weight:500; font-size: 1.05rem; color:#F2F1EA; text-decoration:none; }
+  nav ul{ list-style:none; display:flex; gap: 24px; margin:0; padding:0; }
+  nav a{ text-decoration:none; font-size: 0.82rem; color: var(--dark-ink-soft); letter-spacing: 0.03em; text-transform: uppercase; position:relative; }
+  nav a.current{ color:#F2F1EA; }
+  nav a::after{
+    content:''; position:absolute; left:0; right:0; bottom:-4px; height:2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transform: scaleX(0); transform-origin: left; transition: transform .25s ease;
+  }
+  nav a:hover::after, nav a:focus-visible::after{ transform: scaleX(1); }
+  .menu-btn{ display:none; background:none; border:1px solid var(--dark-line); border-radius:6px; padding:8px 10px; cursor:pointer; }
+  @media (max-width: 640px){
+    .nav-row{ position: relative; }
+    .menu-btn{ display:block; }
+    nav.site-nav{
+      display:none; position: absolute; top: 100%; left: 0; right: 0; z-index: 5;
+      background: var(--dark-bg); border-bottom: 1px solid var(--dark-line);
+    }
+    nav.site-nav.open{ display:block; }
+    nav.site-nav ul{ flex-direction: column; gap:0; padding: 8px 24px 16px; }
+    nav.site-nav li{ padding: 10px 0; border-top: 1px solid var(--dark-line); }
+    nav.site-nav li:first-child{ border-top:none; }
+  }
+
+  main{ padding: 40px 0 80px; }
+  .eyebrow{ font-size: 0.78rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 10px; }
+  .crumb{ font-size: 0.82rem; color: var(--ink-soft); margin: 0 0 18px; }
+  .crumb a{ text-decoration:none; border-bottom:1px solid var(--line-strong); }
+  .crumb a:hover{ color: var(--accent); border-color: var(--accent); }
+  h1{ font-family:'Manrope', sans-serif; font-size: 2rem; font-weight:700; margin: 0 0 10px; }
+  .module-subtitle{ color: var(--ink-soft); max-width: 60ch; margin: 0 0 28px; }
+
+  .objectives{ background: var(--bg-raised); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; margin-bottom: 36px; }
+  .objectives h2{ font-family:'Manrope', sans-serif; font-size: 0.95rem; font-weight:600; margin: 0 0 10px; }
+  .objectives ul{ margin: 0; padding-left: 20px; }
+  .objectives li{ margin-bottom: 4px; font-size: 0.92rem; color: var(--ink-soft); }
+
+  .scope-note{ font-size: 0.82rem; color: var(--ink-faint); border-left: 2px solid var(--line-strong); padding-left: 12px; margin: 0 0 32px; max-width: 60ch; }
+
+  /* ---------- module grid: stage + data panel ---------- */
+  .module-grid{ display:grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 860px){ .module-grid{ grid-template-columns: 1fr; } }
+
+  .stage-card{
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; overflow: hidden;
+  }
+  #stage{ width: 100%; height: auto; display:block; }
+  .region-info{ min-height: 1.4em; font-size: 0.86rem; color: var(--ink-soft); margin: 10px 2px 0; }
+  .dna-region-hit{ cursor: pointer; }
+  .dna-region-hit:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .data-panel{
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; display:flex; flex-direction:column; gap: 14px;
+  }
+  #traceSvg{ width:100%; height:auto; display:block; }
+  .qc-row, .pool-row{ display:flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--line); font-size: 0.86rem; }
+  .qc-row:last-child, .pool-row:last-child{ border-bottom:none; }
+  .qc-key{ color: var(--ink-faint); }
+  .pool-swatch{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+  .bead-label{ display:block; font-size: 0.78rem; color: var(--ink-soft); margin: 6px 0 2px; }
+  #beadBox input[type="range"]{ width: 100%; }
+  #sizeMarkerBox{ font-size: 0.88rem; color: var(--ink-soft); }
+  #pcrBox{ font-size: 0.86rem; color: var(--ink-soft); }
+
+  /* ---------- player controls ---------- */
+  #player{ margin-top: 20px; }
+  .lp-caption{ font-size: 1rem; min-height: 3.2em; margin: 0 0 14px; }
+  .lp-controls{ display:flex; align-items:center; gap: 10px; flex-wrap: wrap; }
+  .lp-btn{
+    display:flex; align-items:center; justify-content:center; width: 36px; height: 36px;
+    border: 1px solid var(--line-strong); border-radius: 50%; background: var(--bg);
+    color: var(--ink); cursor:pointer;
+  }
+  .lp-btn:hover{ border-color: var(--accent); color: var(--accent); }
+  .lp-btn:disabled{ opacity: 0.35; cursor: default; }
+  .lp-btn:disabled:hover{ border-color: var(--line-strong); color: var(--ink); }
+  .lp-btn-play{ background: var(--accent); color: #fff; border-color: var(--accent); }
+  .lp-track{ display:flex; gap: 6px; flex: 1; flex-wrap: wrap; }
+  .lp-dot{ width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); cursor:pointer; padding:0; }
+  .lp-dot:hover{ border-color: var(--accent); }
+  .lp-dot.is-current{ background: var(--accent); border-color: var(--accent); }
+
+  .licence-note{ margin-top: 40px; font-size: 0.78rem; color: var(--ink-faint); }
+  .licence-note a{ border-bottom: 1px solid var(--line-strong); text-decoration:none; }
+
+  .foot-note{ margin-top: 20px; font-size: 0.76rem; color: var(--ink-faint); }
+  footer{ border-top: 1px solid var(--line); margin-top: 40px; }
+  footer .wrap{ padding: 24px; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; scroll-behavior:auto !important; } }
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <div class="nav-row">
+    <a class="nav-mark" href="../../index.html">Peñalba Lab</a>
+    <nav class="site-nav" id="siteNav">
+      <ul>
+        <li><a href="../../index.html#research">Research</a></li>
+        <li><a href="../../index.html#people">People</a></li>
+        <li><a href="../../cv.html">CV</a></li>
+        <li><a href="../../publications.html">Publications</a></li>
+        <li><a href="../../index.html#site-footer">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="menu-btn" aria-label="Toggle menu" aria-expanded="false" id="menuBtn">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="#F2F1EA" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <p class="crumb"><a href="../../index.html">Home</a> → Resources → Sequencing</p>
+    <p class="eyebrow">Learn · Sequencing</p>
+    <h1 id="moduleTitle">Loading…</h1>
+    <p class="module-subtitle" id="moduleSubtitle"></p>
+
+    <div class="objectives">
+      <h2>After this module, you can:</h2>
+      <ul id="objectivesList"></ul>
+    </div>
+
+    <p class="scope-note">This is a first-draft prototype of the default library-prep path. Branch toggles (tagmentation, PCR-free, indexing strategies), "break it" failure mode, and the glossary are planned next.</p>
+
+    <div class="module-grid">
+      <div class="stage-card">
+        <svg id="stage" viewBox="0 0 640 200" role="img" aria-label="Animated diagram of the library molecule at the current step"></svg>
+        <p class="region-info" id="regionInfo"></p>
+      </div>
+      <div class="data-panel">
+        <svg id="traceSvg" viewBox="0 0 380 150" role="img" aria-label="Fragment size distribution for the current step"></svg>
+        <div id="qcBox" hidden></div>
+        <div id="beadBox" hidden></div>
+        <div id="pcrBox" hidden></div>
+        <div id="sizeMarkerBox" hidden></div>
+        <div id="poolBox" hidden></div>
+      </div>
+    </div>
+
+    <div id="player"></div>
+
+    <p class="licence-note">Content licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="foot-note mono">© Joshua Peñalba — Berlin, Germany</p>
+  </div>
+</footer>
+
+<script src="../vendor/gsap-3.12.5.min.js"></script>
+<script src="../shared/dna.js"></script>
+<script src="../shared/player.js"></script>
+<script src="module.js"></script>
+<script>
+  const btn = document.getElementById('menuBtn');
+  const nav = document.getElementById('siteNav');
+  btn.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+  });
+</script>
+</body>
+</html>
