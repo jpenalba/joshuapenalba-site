@@ -11,14 +11,14 @@
     {
       "id": "step0",
       "title": "Starting material",
-      "caption": "We start with high-molecular-weight genomic DNA from the sample.",
+      "caption": "Ideally, we would start with high-molecular-weight DNA, although degraded DNA can still work for standard Illumina library preps. The quality of the DNA is dependent on how well the tissue was preserved and the quantity is dependent on the tissue type and amount. Different extraction methods can have different efficacies but the most important factor is how well the tissues have been preserved.",
       "trace": { "peaks": [ { "center": 900, "height": 1.0, "width": 70 } ] },
       "qc": null
     },
     {
       "id": "step1",
       "title": "Input QC",
-      "caption": "Before anything else: how much DNA, how intact, how clean?",
+      "caption": "The DNA then needs to be quantified and checked on a gel electrophoresis. Intact DNA would require a lot of shearing while degraded DNA might require little to no shearing. It may also be important to normalize the DNA amount/concentration to match the requirements of the specific library prep protocol.",
       "trace": null,
       "gel": {
         "lanes": [
