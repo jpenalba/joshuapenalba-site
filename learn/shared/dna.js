@@ -144,8 +144,33 @@ const DNA = (() => {
     return g;
   }
 
+  // 3' A-tail's complementary marker on the adapter side -- an open square
+  // (vs. the insert's filled A square) so the A/T pairing at the ligation
+  // junction reads as two distinct pieces meeting, not one blob.
+  function tOverhangSquare(parent, { x, y, size = 10 } = {}) {
+    const g = group(parent, { class: 'dna-toverhang-square' });
+    el('rect', { x: x - size / 2, y: y - size / 2, width: size, height: size, rx: 2, fill: '#fff', stroke: 'var(--mol-backbone)', 'stroke-width': 1.3 }, g);
+    el('text', { x, y: y + size * 0.32, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': size * 0.75, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'T';
+    return g;
+  }
+
+  // A Y-adapter drawn with its double-stranded "stem" (the primer-binding
+  // site, Read 1/Read 2) as a distinct block from the single-stranded fork
+  // (flow-cell + index). Pre-ligation, it's already the same three parts it
+  // resolves into once PCR closes the Y, just coloured instead of labelled.
+  function yAdapterStem(parent, { x, y, side = 'left', stemW = 16, stemH = 32, stemColor, armLength = 42, spread = 22, strokeWidth = 12, colorOuter, colorInner } = {}) {
+    const dir = side === 'left' ? -1 : 1;
+    const g = group(parent, { class: `dna-yadapter-stem dna-yadapter-stem-${side}` });
+    const stemX = side === 'left' ? x - stemW : x;
+    el('rect', { x: stemX, y: y - stemH / 2, width: stemW, height: stemH, fill: stemColor }, g);
+    const forkX = side === 'left' ? stemX : stemX + stemW;
+    el('path', { d: `M ${forkX} ${y} L ${forkX + dir * armLength} ${y - spread}`, stroke: colorOuter, 'stroke-width': strokeWidth, fill: 'none', 'stroke-linecap': 'round' }, g);
+    el('path', { d: `M ${forkX} ${y} L ${forkX + dir * armLength} ${y + spread}`, stroke: colorInner, 'stroke-width': strokeWidth, fill: 'none', 'stroke-linecap': 'round' }, g);
+    return g;
+  }
+
   return {
-    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, fragmentOverhang, phosphateDot, aTailDot, aTailSquare, yAdapterOpen,
+    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, fragmentOverhang, phosphateDot, aTailDot, aTailSquare, tOverhangSquare, yAdapterOpen, yAdapterStem,
     REGIONS: {
       p5:    { key: 'p5',    label: 'P5', color: 'var(--reg-p5)' },
       i5:    { key: 'i5',    label: 'i5', color: 'var(--reg-i5)' },

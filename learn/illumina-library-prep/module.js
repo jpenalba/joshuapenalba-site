@@ -289,10 +289,51 @@
     });
   }
 
+  // Background fragments already carrying Y-adapters -- kept in the top and
+  // bottom margins so they never overlap the large focal fragment in the
+  // centre of the stage.
+  const LIGATION_BG = [
+    { x: 50, y: 32, w: 70 }, { x: 260, y: 22, w: 60 }, { x: 480, y: 35, w: 80 },
+    { x: 70, y: 198, w: 65 }, { x: 420, y: 205, w: 70 }, { x: 560, y: 188, w: 55 }
+  ];
+
   function drawAdapterLigation(svg) {
-    DNA.fragmentBar(svg, { x: FOCAL_X, y: MID_Y, width: FOCAL_W, height: FOCAL_H });
-    DNA.yAdapterOpen(svg, { x: FOCAL_X, y: MID_Y, side: 'left', armLength: 50, spread: 26, colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)' });
-    DNA.yAdapterOpen(svg, { x: FOCAL_X + FOCAL_W, y: MID_Y, side: 'right', armLength: 50, spread: 26, colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)' });
+    LIGATION_BG.forEach(f => {
+      const fh = 5, fgap = 3, stemH = fh * 2 + fgap;
+      DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height: fh, gap: fgap, overhangs: {} });
+      DNA.yAdapterStem(svg, {
+        x: f.x, y: f.y, side: 'left', stemW: 7, stemH, armLength: 14, spread: 8, strokeWidth: fh,
+        stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
+      });
+      DNA.yAdapterStem(svg, {
+        x: f.x + f.w, y: f.y, side: 'right', stemW: 7, stemH, armLength: 14, spread: 8, strokeWidth: fh,
+        stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
+      });
+    });
+
+    // Focal fragment: two equal strand bars (as in End repair/A-tailing),
+    // each Y-adapter attached as a coloured stem (primer site) + fork
+    // (flow-cell binding site + index), with the A/T overhang pairing that
+    // gives the ligation its specificity called out at each end.
+    const fh = 12, fgap = 8, stemH = fh * 2 + fgap;
+    DNA.yAdapterStem(svg, {
+      x: FOCAL_X, y: MID_Y, side: 'left', stemW: 20, stemH, armLength: 50, spread: 26, strokeWidth: fh,
+      stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
+    });
+    DNA.yAdapterStem(svg, {
+      x: FOCAL_X + FOCAL_W, y: MID_Y, side: 'right', stemW: 20, stemH, armLength: 50, spread: 26, strokeWidth: fh,
+      stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
+    });
+    DNA.fragmentOverhang(svg, { x: FOCAL_X, y: MID_Y, width: FOCAL_W, height: fh, gap: fgap, overhangs: {} });
+
+    const topY = MID_Y - fgap / 2 - fh / 2;
+    const botY = MID_Y + fgap / 2 + fh / 2;
+    DNA.phosphateDot(svg, { x: FOCAL_X, y: topY, r: 7 });
+    DNA.aTailSquare(svg, { x: FOCAL_X, y: botY, size: 13 });
+    DNA.tOverhangSquare(svg, { x: FOCAL_X - 13, y: botY, size: 13 });
+    DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: topY, size: 13 });
+    DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W + 13, y: topY, size: 13 });
+    DNA.phosphateDot(svg, { x: FOCAL_X + FOCAL_W, y: botY, r: 7 });
   }
 
   function drawPCR(svg, cycles) {
@@ -378,6 +419,15 @@
     drawTraceAxis(svg);
     const path = DNA.el('path', { d: tracePathD(peaks), fill: 'var(--accent)', opacity: 0.22, stroke: 'var(--accent)', 'stroke-width': 1.6 }, svg);
     return path;
+  }
+
+  // Calls out one peak on the trace with a short leader line + label, e.g.
+  // identifying a small secondary peak as adapter contamination.
+  function drawTraceAnnotation(svg, peak, label) {
+    const x = TRACE_PAD + (peak.center / 1000) * (TRACE_W - TRACE_PAD * 2);
+    const y = (TRACE_H - TRACE_PAD) - peak.height * (TRACE_H - TRACE_PAD * 2);
+    DNA.el('line', { x1: x, y1: y - 4, x2: x, y2: y - 24, stroke: 'var(--ink-faint)', 'stroke-width': 1.3 }, svg);
+    DNA.el('text', { x: x + 6, y: y - 16, 'text-anchor': 'start', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = label;
   }
 
   // ---------- Fragmentation QC: a gel of under/perfectly/over-sheared samples
@@ -733,6 +783,9 @@
 
     // --- trace ---
     if (traceSvg && step.trace) buildTrace(traceSvg, step.trace.peaks);
+    if (traceSvg && step.traceAnnotation) {
+      drawTraceAnnotation(traceSvg, step.trace.peaks[step.traceAnnotation.peakIndex], step.traceAnnotation.label);
+    }
 
     // --- widgets ---
     if (step.qc) {
