@@ -668,45 +668,72 @@
   // Three libraries with equal molecule counts -- pooling is about ratio,
   // not amount, so unlike Normalize's unequal clusters these are identical
   // -- each with an arrow converging into one shared tube.
+  // A microcentrifuge tube with its hinged lid flipped open: a tapered
+  // conical body under a collar, graduation ticks down one side, and the
+  // lid rotated open and back over the collar rather than drawn closed.
+  function drawTubeIcon(svg, cx, topY, w, h) {
+    const halfW = w / 2;
+    const shoulderY = topY + h * 0.32;
+    const tipY = topY + h;
+
+    const hingeX = cx + halfW - 2, hingeY = topY - 2;
+    const lidLen = 28, lidThick = 10, lidAngle = -102;
+    DNA.el('path', { d: `M ${hingeX} ${hingeY} Q ${hingeX + 6} ${hingeY - 10} ${hingeX + 2} ${hingeY - 18}`, fill: 'none', stroke: 'var(--ink-faint)', 'stroke-width': 1.3 }, svg);
+    DNA.el('rect', {
+      x: hingeX, y: hingeY - lidThick / 2, width: lidLen, height: lidThick, rx: 4,
+      fill: 'var(--bg-raised)', stroke: 'var(--ink-soft)', 'stroke-width': 1.6,
+      transform: `rotate(${lidAngle} ${hingeX} ${hingeY})`
+    }, svg);
+
+    DNA.el('rect', { x: cx - halfW - 5, y: topY - 7, width: w + 10, height: 11, rx: 3, fill: 'var(--bg-raised)', stroke: 'var(--ink-soft)', 'stroke-width': 1.6 }, svg);
+
+    const liquidTopY = topY + h * 0.62;
+    const liquidT = Math.max(0, (liquidTopY - shoulderY) / (tipY - shoulderY));
+    const liquidHalfW = halfW * (1 - liquidT);
+    DNA.el('path', { d: `M ${cx - liquidHalfW} ${liquidTopY} L ${cx} ${tipY} L ${cx + liquidHalfW} ${liquidTopY} Z`, fill: 'var(--reg-read1)', opacity: 0.3 }, svg);
+
+    DNA.el('path', {
+      d: `M ${cx - halfW} ${topY + 2} L ${cx - halfW} ${shoulderY} L ${cx} ${tipY} L ${cx + halfW} ${shoulderY} L ${cx + halfW} ${topY + 2}`,
+      fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 1.8, 'stroke-linejoin': 'round'
+    }, svg);
+
+    [0.48, 0.68, 0.85].forEach(f => {
+      const y = topY + h * f;
+      const t = Math.max(0, (y - shoulderY) / (tipY - shoulderY));
+      const hw = halfW * (1 - t);
+      DNA.el('line', { x1: cx + hw * 0.35, y1: y, x2: cx + hw * 0.9, y2: y, stroke: 'var(--ink-faint)', 'stroke-width': 1.3 }, svg);
+    });
+  }
+
   function drawPoolMerge(svg) {
     const clusterXs = [100, 300, 500];
-    const clusterY = 50, count = 6, cols = 3;
+    const clusterY = 48, count = 6, cols = 3;
     const molW = 32, capW = 6, cellW = 42, cellH = 18;
     const labels = ['Library A', 'Library B', 'Library C'];
-    const tubeCx = 610, tubeTopY = 92, tubeW = 76, tubeH = 104;
+    const rows = Math.ceil(count / cols), gridW = cols * cellW, gridH = rows * cellH;
+    const tubeCx = 300, tubeTopY = 128, tubeW = 62, tubeH = 78;
 
     // Tube drawn first so the arrows (and their arrowheads) land on top of
     // the lid rather than being painted over by it.
-    const x0 = tubeCx - tubeW / 2, x1 = tubeCx + tubeW / 2;
-    DNA.el('rect', { x: x0 - 5, y: tubeTopY - 12, width: tubeW + 10, height: 13, rx: 3, fill: 'var(--line-strong)' }, svg);
-    DNA.el('path', {
-      d: `M ${x0} ${tubeTopY} L ${x0} ${tubeTopY + tubeH * 0.55} Q ${x0} ${tubeTopY + tubeH} ${tubeCx} ${tubeTopY + tubeH} Q ${x1} ${tubeTopY + tubeH} ${x1} ${tubeTopY + tubeH * 0.55} L ${x1} ${tubeTopY} Z`,
-      fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2
-    }, svg);
-    DNA.el('path', {
-      d: `M ${x0 + 3} ${tubeTopY + tubeH * 0.4} L ${x0 + 3} ${tubeTopY + tubeH * 0.55} Q ${x0 + 3} ${tubeTopY + tubeH - 3} ${tubeCx} ${tubeTopY + tubeH - 3} Q ${x1 - 3} ${tubeTopY + tubeH - 3} ${x1 - 3} ${tubeTopY + tubeH * 0.55} L ${x1 - 3} ${tubeTopY + tubeH * 0.4} Z`,
-      fill: 'var(--reg-read1)', opacity: 0.3
-    }, svg);
+    drawTubeIcon(svg, tubeCx, tubeTopY, tubeW, tubeH);
     DNA.el('text', {
       x: tubeCx, y: tubeTopY + tubeH + 20, 'text-anchor': 'middle',
       'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
     }, svg).textContent = 'Pooled library';
 
     clusterXs.forEach((cx, ci) => {
-      const rows = Math.ceil(count / cols);
-      const gridW = cols * cellW, gridH = rows * cellH;
       const startX = cx - gridW / 2 + cellW / 2, startY = clusterY - gridH / 2 + cellH / 2;
       for (let i = 0; i < count; i++) {
         const col = i % cols, row = Math.floor(i / cols);
         pcrMoleculeWithCaps(svg, startX + col * cellW, startY + row * cellH, molW, capW);
       }
       DNA.el('text', {
-        x: cx, y: clusterY + gridH / 2 + 22, 'text-anchor': 'middle',
+        x: cx, y: clusterY - gridH / 2 - 10, 'text-anchor': 'middle',
         'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
       }, svg).textContent = labels[ci];
 
-      const targetX = tubeCx - 24 + ci * 24;
-      arrowTo(svg, cx, clusterY + gridH / 2 + 30, targetX, tubeTopY - 16, 'var(--ink-faint)');
+      const targetX = tubeCx - 14 + ci * 14;
+      arrowTo(svg, cx, clusterY + gridH / 2 + 8, targetX, tubeTopY - 14, 'var(--ink-faint)');
     });
   }
 
