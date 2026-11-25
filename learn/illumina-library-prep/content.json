@@ -154,17 +154,9 @@
       "qc": null
     },
     {
-      "id": "step6",
-      "title": "Bead clean-up / size selection",
-      "caption": "Magnetic beads remove leftover adapters and fragments that are too short or too long. The bead ratio sets the cut-off.",
-      "trace": { "peaks": [ { "center": 380, "height": 0.8, "width": 110 }, { "center": 125, "height": 0.18, "width": 20 } ] },
-      "beadSelect": { "defaultMin": 200, "defaultMax": 600 },
-      "qc": null
-    },
-    {
       "id": "step7",
       "title": "Library PCR",
-      "caption": "PCR completes or enriches full-length molecules and raises the yield. Each cycle adds bias.",
+      "caption": "PCR completes or enriches full-length molecules and raises the yield. The first cycle is special: each original strand only has a primer site at one end, so polymerase must copy all the way across to create a proper binding site at the other end. From the second cycle on, primers anneal at both ends and every molecule doubles. Each cycle adds bias.",
       "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
       "pcrCycles": 8,
       "qc": null
