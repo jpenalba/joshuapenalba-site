@@ -683,11 +683,11 @@
       } else if (f.visual === 'dimer') {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItAdapterDimer(stageSvg);
-        buildTrace(chartSvg, [f.trace]);
+        buildTrace(chartSvg, f.traces || [f.trace]);
       } else if (f.visual === 'chimera') {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItChimera(stageSvg);
-        buildTrace(chartSvg, [f.trace]);
+        buildTrace(chartSvg, f.traces || [f.trace]);
       } else {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItSizeFailure(stageSvg, f.scale);
