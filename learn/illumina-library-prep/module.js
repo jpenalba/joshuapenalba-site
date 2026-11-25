@@ -425,14 +425,20 @@
 
     const camera = DNA.group(svg, { class: 'pcr-camera' });
 
-    const fh = 3, fgap = 2, armLength = 13, spread = 9, coreW = 30, capW = 6, bluntW = 30;
+    // innerW is the inner grey span that never changes; bluntW (= innerW +
+    // 2*capW) is the fully-resolved molecule's total width, matching every
+    // other molecule on the grid. Pre-resolution, each arm reaches out an
+    // extra armLength beyond innerW, diagonally -- cycle 1 straightens and
+    // shortens that reach down to exactly capW, so the arm ends up
+    // occupying precisely where its resolved end-cap belongs.
+    const fh = 3, fgap = 2, armLength = 13, spread = 9, innerW = 18, capW = 6, bluntW = innerW + capW * 2;
     const p0 = pcrSlotPos(0), p1 = pcrSlotPos(1);
     const topY = p0.y - fgap / 2 - fh, botY = p0.y + fgap / 2;
 
     // The seed camera frames the whole molecule -- core plus both diagonal
     // arms -- so the colourful adapter ends are the focus from the very
     // first frame, not just the grey insert in the middle.
-    const seedCam = pcrCameraFromBBox(p0.x, p0.y, coreW + armLength * 2, 2 * (fgap / 2 + fh / 2 + spread));
+    const seedCam = pcrCameraFromBBox(p0.x, p0.y, innerW + armLength * 2, 2 * (fgap / 2 + fh / 2 + spread));
     pcrSetCamera(camera, seedCam);
     const cam = { s: seedCam.s, tx: seedCam.tx, ty: seedCam.ty };
 
@@ -440,51 +446,37 @@
     // independent strand groups so they can be pulled apart on denaturing.
     const topStrand = DNA.group(camera, { class: 'pcr-top-strand' });
     const botStrand = DNA.group(camera, { class: 'pcr-bot-strand' });
-    DNA.el('rect', { x: p0.x - coreW / 2, y: topY, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, topStrand);
-    DNA.el('rect', { x: p0.x - coreW / 2, y: botY, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, botStrand);
-    const topLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: topY + fh / 2, x2: p0.x - coreW / 2 - armLength, y2: topY + fh / 2 - spread, stroke: 'var(--reg-p5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
-    const topRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: topY + fh / 2, x2: p0.x + coreW / 2 + armLength, y2: topY + fh / 2 - spread, stroke: 'var(--reg-p7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
-    const botLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: botY + fh / 2, x2: p0.x - coreW / 2 - armLength, y2: botY + fh / 2 + spread, stroke: 'var(--reg-i5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
-    const botRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: botY + fh / 2, x2: p0.x + coreW / 2 + armLength, y2: botY + fh / 2 + spread, stroke: 'var(--reg-i7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
+    DNA.el('rect', { x: p0.x - innerW / 2, y: topY, width: innerW, height: fh, fill: 'var(--mol-backbone)' }, topStrand);
+    DNA.el('rect', { x: p0.x - innerW / 2, y: botY, width: innerW, height: fh, fill: 'var(--mol-backbone)' }, botStrand);
+    const topLeftArm = DNA.el('line', { x1: p0.x - innerW / 2, y1: topY + fh / 2, x2: p0.x - innerW / 2 - armLength, y2: topY + fh / 2 - spread, stroke: 'var(--reg-p5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
+    const topRightArm = DNA.el('line', { x1: p0.x + innerW / 2, y1: topY + fh / 2, x2: p0.x + innerW / 2 + armLength, y2: topY + fh / 2 - spread, stroke: 'var(--reg-p7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
+    const botLeftArm = DNA.el('line', { x1: p0.x - innerW / 2, y1: botY + fh / 2, x2: p0.x - innerW / 2 - armLength, y2: botY + fh / 2 + spread, stroke: 'var(--reg-i5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
+    const botRightArm = DNA.el('line', { x1: p0.x + innerW / 2, y1: botY + fh / 2, x2: p0.x + innerW / 2 + armLength, y2: botY + fh / 2 + spread, stroke: 'var(--reg-i7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
 
-    // Resolved end-caps on the original strands, hidden until extension
-    // completes -- they cross-fade in exactly where their diagonal arm
-    // fades out, so the Y visually "resolves" into a blunt coloured end.
-    const topLeftCap = DNA.el('rect', { x: p0.x - coreW / 2, y: topY, width: capW, height: fh, fill: 'var(--reg-p5)', opacity: 0 }, topStrand);
-    const topRightCap = DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: topY, width: capW, height: fh, fill: 'var(--reg-p7)', opacity: 0 }, topStrand);
-    const botLeftCap = DNA.el('rect', { x: p0.x - coreW / 2, y: botY, width: capW, height: fh, fill: 'var(--reg-i5)', opacity: 0 }, botStrand);
-    const botRightCap = DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: botY, width: capW, height: fh, fill: 'var(--reg-i7)', opacity: 0 }, botStrand);
-
-    // Primers (hidden until cycle 1's anneal step): one near the tip of the
-    // top strand's left arm, one near the tip of the bottom strand's right
-    // arm -- where the actual P5/P7 sequence is, not at the core edge.
-    function pcrPrimerOnArm(parent, x0, y0, dx, dy, color) {
-      const t = 0.78, len = 6;
-      const cx = x0 + dx * t, cy = y0 + dy * t;
-      const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
-      return DNA.el('rect', {
-        x: cx - len / 2, y: cy - fh / 2, width: len, height: fh, fill: color, opacity: 0,
-        transform: `rotate(${angleDeg.toFixed(2)} ${cx} ${cy})`
-      }, parent);
-    }
-    const primerTop = pcrPrimerOnArm(topStrand, p0.x - coreW / 2, topY + fh / 2, -armLength, -spread, 'var(--accent)');
-    const primerBot = pcrPrimerOnArm(botStrand, p0.x + coreW / 2, botY + fh / 2, armLength, spread, 'var(--accent)');
+    // Primers (hidden until cycle 1's anneal step, which only happens once
+    // each strand has finished straightening): one at the far end of the
+    // top strand's left arm, one at the far end of the bottom strand's
+    // right arm -- the actual P5/P7 sequence, not the core edge.
+    const primerLen = 6;
+    const primerTop = DNA.el('rect', { x: p0.x - bluntW / 2 - primerLen / 2, y: topY, width: primerLen, height: fh, fill: 'var(--accent)', opacity: 0 }, topStrand);
+    const primerBot = DNA.el('rect', { x: p0.x + bluntW / 2 - primerLen / 2, y: botY, width: primerLen, height: fh, fill: 'var(--accent)', opacity: 0 }, botStrand);
 
     // New complementary strand for the top-strand molecule, grown outward
     // from its primer during cycle 1's extend step -- scaleX anchored at
-    // the primer end so the bar reads as "growing," already carrying the
-    // i5/i7 end-caps its finished form will keep (the colour is the
-    // opposite pairing from the template strand it's completing).
+    // the primer end so the bar reads as "growing," spanning the full
+    // resolved width and already carrying the i5/i7 end-caps its finished
+    // form will keep (the opposite colour pairing from the template
+    // strand it's completing).
     const newStrandTop = DNA.group(topStrand, { class: 'pcr-new-strand' });
-    DNA.el('rect', { x: p0.x - coreW / 2, y: botY, width: capW, height: fh, fill: 'var(--reg-i5)' }, newStrandTop);
-    DNA.el('rect', { x: p0.x - coreW / 2 + capW, y: botY, width: coreW - capW * 2, height: fh, fill: 'var(--mol-backbone)' }, newStrandTop);
-    DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: botY, width: capW, height: fh, fill: 'var(--reg-i7)' }, newStrandTop);
+    DNA.el('rect', { x: p0.x - bluntW / 2, y: botY, width: capW, height: fh, fill: 'var(--reg-i5)' }, newStrandTop);
+    DNA.el('rect', { x: p0.x - bluntW / 2 + capW, y: botY, width: bluntW - capW * 2, height: fh, fill: 'var(--mol-backbone)' }, newStrandTop);
+    DNA.el('rect', { x: p0.x + bluntW / 2 - capW, y: botY, width: capW, height: fh, fill: 'var(--reg-i7)' }, newStrandTop);
     gsap.set(newStrandTop, { scaleX: 0, transformOrigin: 'left center' });
 
     const newStrandBot = DNA.group(botStrand, { class: 'pcr-new-strand' });
-    DNA.el('rect', { x: p0.x - coreW / 2, y: topY, width: capW, height: fh, fill: 'var(--reg-p5)' }, newStrandBot);
-    DNA.el('rect', { x: p0.x - coreW / 2 + capW, y: topY, width: coreW - capW * 2, height: fh, fill: 'var(--mol-backbone)' }, newStrandBot);
-    DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: topY, width: capW, height: fh, fill: 'var(--reg-p7)' }, newStrandBot);
+    DNA.el('rect', { x: p0.x - bluntW / 2, y: topY, width: capW, height: fh, fill: 'var(--reg-p5)' }, newStrandBot);
+    DNA.el('rect', { x: p0.x - bluntW / 2 + capW, y: topY, width: bluntW - capW * 2, height: fh, fill: 'var(--mol-backbone)' }, newStrandBot);
+    DNA.el('rect', { x: p0.x + bluntW / 2 - capW, y: topY, width: capW, height: fh, fill: 'var(--reg-p7)' }, newStrandBot);
     gsap.set(newStrandBot, { scaleX: 0, transformOrigin: 'right center' });
 
     // Pre-built molecules for every slot beyond the first two -- hidden
@@ -514,14 +506,18 @@
     tl.set(cam, { s: seedCam.s, tx: seedCam.tx, ty: seedCam.ty, onComplete: () => pcrSetCamera(camera, cam) }, 0)
       .call(() => { counter.textContent = `Cycle 0 of ${cycles}`; }, null, 0);
 
-    // --- Cycle 1: denature -> anneal (one primer per strand) -> extend -> settle ---
+    // --- Cycle 1: denature -> bend each arm straight -> anneal (one primer
+    // per strand, now at the straightened tip) -> extend -> settle ---
     tl.to(topStrand, { y: -9, duration: 1.1, ease: 'power1.inOut' }, 0)
       .to(botStrand, { y: 9, duration: 1.1, ease: 'power1.inOut' }, '<')
+      .to(topLeftArm, { attr: { x2: p0.x - bluntW / 2, y2: topY + fh / 2 }, duration: 1.2, ease: 'power1.inOut' }, '>')
+      .to(topRightArm, { attr: { x2: p0.x + bluntW / 2, y2: topY + fh / 2 }, duration: 1.2, ease: 'power1.inOut' }, '<')
+      .to(botLeftArm, { attr: { x2: p0.x - bluntW / 2, y2: botY + fh / 2 }, duration: 1.2, ease: 'power1.inOut' }, '<')
+      .to(botRightArm, { attr: { x2: p0.x + bluntW / 2, y2: botY + fh / 2 }, duration: 1.2, ease: 'power1.inOut' }, '<')
       .to([primerTop, primerBot], { opacity: 1, duration: 0.55 })
       .to(newStrandTop, { scaleX: 1, duration: 1.4, ease: 'none' }, '>')
       .to(newStrandBot, { scaleX: 1, duration: 1.4, ease: 'none' }, '<')
-      .to([topLeftCap, topRightCap, botLeftCap, botRightCap], { opacity: 1, duration: 0.5 }, '<0.7')
-      .to([topLeftArm, topRightArm, botLeftArm, botRightArm, primerTop, primerBot], { opacity: 0, duration: 0.5 }, '<')
+      .to([primerTop, primerBot], { opacity: 0, duration: 0.5 }, '<0.7')
       .call(() => { counter.textContent = `Cycle 1 of ${cycles}`; })
       .to(topStrand, { x: 0, y: 0, duration: 0.9, ease: 'power1.inOut' }, '>')
       .to(botStrand, { x: p1.x - p0.x, y: 0, duration: 0.9, ease: 'power1.inOut' }, '<');
