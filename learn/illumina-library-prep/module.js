@@ -654,16 +654,102 @@
     });
   }
 
-  function drawPooled(svg) {
-    const poolColors = ['var(--reg-i7)', '#8A4F7D', '#4F7D8A'];
-    const scale = 0.62;
-    const sw = REGION_DEFS.reduce((s, r) => s + r.width * scale, 0);
-    const sx = (STAGE_W - sw) / 2;
-    [-62, 0, 62].forEach((dy, i) => {
-      const regions = REGION_DEFS.map(r => ({ ...r, width: r.width * scale, color: r.key === 'i7' ? poolColors[i] : r.color }));
-      DNA.regionRow(svg, { x: sx, y: MID_Y + dy, height: ROW_H * scale * 1.05, regions });
+  // A straight arrow (line + chevron head) between two arbitrary points,
+  // the chevron oriented to match the line's own angle rather than a
+  // fixed direction, since several of these converge from different sides.
+  function arrowTo(svg, x1, y1, x2, y2, color) {
+    DNA.el('line', { x1, y1, x2, y2, stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+    const ang = Math.atan2(y2 - y1, x2 - x1), ah = 7;
+    [ang + Math.PI * 0.82, ang - Math.PI * 0.82].forEach(a => {
+      DNA.el('line', { x1: x2, y1: y2, x2: x2 + ah * Math.cos(a), y2: y2 + ah * Math.sin(a), stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
     });
-    return poolColors;
+  }
+
+  // Three libraries with equal molecule counts -- pooling is about ratio,
+  // not amount, so unlike Normalize's unequal clusters these are identical
+  // -- each with an arrow converging into one shared tube.
+  function drawPoolMerge(svg) {
+    const clusterXs = [100, 300, 500];
+    const clusterY = 50, count = 6, cols = 3;
+    const molW = 32, capW = 6, cellW = 42, cellH = 18;
+    const labels = ['Library A', 'Library B', 'Library C'];
+    const tubeCx = 610, tubeTopY = 92, tubeW = 76, tubeH = 104;
+
+    // Tube drawn first so the arrows (and their arrowheads) land on top of
+    // the lid rather than being painted over by it.
+    const x0 = tubeCx - tubeW / 2, x1 = tubeCx + tubeW / 2;
+    DNA.el('rect', { x: x0 - 5, y: tubeTopY - 12, width: tubeW + 10, height: 13, rx: 3, fill: 'var(--line-strong)' }, svg);
+    DNA.el('path', {
+      d: `M ${x0} ${tubeTopY} L ${x0} ${tubeTopY + tubeH * 0.55} Q ${x0} ${tubeTopY + tubeH} ${tubeCx} ${tubeTopY + tubeH} Q ${x1} ${tubeTopY + tubeH} ${x1} ${tubeTopY + tubeH * 0.55} L ${x1} ${tubeTopY} Z`,
+      fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2
+    }, svg);
+    DNA.el('path', {
+      d: `M ${x0 + 3} ${tubeTopY + tubeH * 0.4} L ${x0 + 3} ${tubeTopY + tubeH * 0.55} Q ${x0 + 3} ${tubeTopY + tubeH - 3} ${tubeCx} ${tubeTopY + tubeH - 3} Q ${x1 - 3} ${tubeTopY + tubeH - 3} ${x1 - 3} ${tubeTopY + tubeH * 0.55} L ${x1 - 3} ${tubeTopY + tubeH * 0.4} Z`,
+      fill: 'var(--reg-read1)', opacity: 0.3
+    }, svg);
+    DNA.el('text', {
+      x: tubeCx, y: tubeTopY + tubeH + 20, 'text-anchor': 'middle',
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+    }, svg).textContent = 'Pooled library';
+
+    clusterXs.forEach((cx, ci) => {
+      const rows = Math.ceil(count / cols);
+      const gridW = cols * cellW, gridH = rows * cellH;
+      const startX = cx - gridW / 2 + cellW / 2, startY = clusterY - gridH / 2 + cellH / 2;
+      for (let i = 0; i < count; i++) {
+        const col = i % cols, row = Math.floor(i / cols);
+        pcrMoleculeWithCaps(svg, startX + col * cellW, startY + row * cellH, molW, capW);
+      }
+      DNA.el('text', {
+        x: cx, y: clusterY + gridH / 2 + 22, 'text-anchor': 'middle',
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+      }, svg).textContent = labels[ci];
+
+      const targetX = tubeCx - 24 + ci * 24;
+      arrowTo(svg, cx, clusterY + gridH / 2 + 30, targetX, tubeTopY - 16, 'var(--ink-faint)');
+    });
+  }
+
+  // "Final QC": a single electropherogram-style trace with concentration
+  // and molarity called out directly on the chart, the two numbers that
+  // actually decide whether the pool is ready to sequence.
+  function drawElectropherogram(svg, data) {
+    const padL = 64, padR = 30, padT = 28, padB = 50;
+    const x0 = padL, x1 = STAGE_W - padR, y0 = STAGE_H - padB, y1 = padT;
+    DNA.el('line', { x1: x0, y1: y0, x2: x1, y2: y0, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+    DNA.el('line', { x1: x0, y1: y0, x2: x0, y2: y1, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+    [0, 250, 500, 750, 1000].forEach(bp => {
+      const bx = x0 + (bp / 1000) * (x1 - x0);
+      DNA.el('line', { x1: bx, y1: y0, x2: bx, y2: y0 + 5, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+      DNA.el('text', { x: bx, y: y0 + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = bp;
+    });
+    DNA.el('text', { x: (x0 + x1) / 2, y: y0 + 40, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = 'fragment size (bp)';
+
+    const n = 120;
+    let d = '';
+    for (let i = 0; i <= n; i++) {
+      const bp = (i / n) * 1000;
+      const v = 0.85 * Math.exp(-((bp - data.center) ** 2) / (2 * data.width * data.width));
+      const px = x0 + (bp / 1000) * (x1 - x0), py = y0 - v * (y0 - y1);
+      d += (i === 0 ? 'M' : ' L') + ` ${px} ${py}`;
+    }
+    DNA.el('path', { d, fill: 'var(--accent)', opacity: 0.22, stroke: 'var(--accent)', 'stroke-width': 2 }, svg);
+
+    const boxW = 150, boxX = x1 - boxW, boxY = y1 + 6;
+    DNA.el('rect', { x: boxX, y: boxY, width: boxW, height: 56, rx: 8, fill: 'var(--bg-raised)', stroke: 'var(--line)', 'stroke-width': 1 }, svg);
+    DNA.el('text', { x: boxX + 12, y: boxY + 23, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink)' }, svg).textContent = `Conc: ${data.conc}`;
+    DNA.el('text', { x: boxX + 12, y: boxY + 43, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink)' }, svg).textContent = `Molarity: ${data.molarity}`;
+  }
+
+  function buildFinalQC(mount, data) {
+    mount.innerHTML = `
+      <div class="breakit-head"><h3>${data.title}</h3></div>
+      <p class="breakit-text">${data.caption}</p>
+      <div class="stage-card final-anatomy-stage-card">
+        <svg class="finalqc-stage" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Electropherogram trace of the final pooled library, with concentration and molarity"></svg>
+      </div>
+    `;
+    drawElectropherogram(mount.querySelector('.finalqc-stage'), data.electropherogram);
   }
 
   // ---------- size-trace chart (static per step, plus optional bead shading) ----------
@@ -1217,6 +1303,7 @@
       ${step.fragQC ? '<div class="breakit-block fragqc-block"></div>' : ''}
       ${step.libraryQC ? '<div class="breakit-block libqc-block"></div>' : ''}
       ${step.finalAnatomy ? '<div class="breakit-block final-anatomy-block"></div>' : ''}
+      ${step.finalQC ? '<div class="breakit-block finalqc-block"></div>' : ''}
     `;
     container.appendChild(section);
 
@@ -1254,7 +1341,7 @@
     } else if (step.id === 'step10') {
       drawNormalizeClusters(stageSvg);
     } else if (step.id === 'step9') {
-      section._poolColors = drawPooled(stageSvg);
+      drawPoolMerge(stageSvg);
     }
 
     // --- trace ---
@@ -1290,10 +1377,6 @@
     }
     if (step.pcrCycles) {
       widgets.innerHTML = `<div class="pcr-widget">Each PCR cycle roughly doubles the number of molecules — and any bias with them.</div>`;
-    } else if (step.pool) {
-      widgets.innerHTML = step.pool.samples.map((s, i) =>
-        `<div class="pool-row"><span class="pool-swatch" style="background:${section._poolColors[i]}"></span><span class="mono">${s} — ${Math.round(step.pool.shares[i] * 100)}%</span></div>`
-      ).join('');
     }
 
     if (step.breakIt) {
@@ -1307,6 +1390,9 @@
     }
     if (step.finalAnatomy) {
       buildFinalAnatomySection(section.querySelector('.final-anatomy-block'), step.finalAnatomy);
+    }
+    if (step.finalQC) {
+      buildFinalQC(section.querySelector('.finalqc-block'), step.finalQC);
     }
 
     // --- reveal on scroll ---
