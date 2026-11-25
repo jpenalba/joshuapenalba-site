@@ -159,6 +159,27 @@
       "caption": "PCR completes or enriches full-length molecules and raises the yield. The first cycle is special: each original strand only has a primer site at one end, so polymerase must copy all the way across to create a proper binding site at the other end. From the second cycle on, primers anneal at both ends and every molecule doubles. Each cycle adds bias.",
       "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
       "pcrCycles": 8,
+      "breakIt": {
+        "title": "Break it: common PCR failures",
+        "failures": [
+          {
+            "id": "duplicates",
+            "label": "Over-amplification",
+            "mechanism": "Running too many PCR cycles, or starting from very little input DNA, means the same original molecules get copied over and over. Eventually most of what's being amplified is PCR duplicates of a few starting molecules, not new, unique fragments.",
+            "fingerprint": "Doesn't show up on a size trace — duplicate molecules are the same length as everything else. It only appears after sequencing, as a high fraction of reads mapping to the exact same start and end position.",
+            "mitigation": "Use fewer PCR cycles, start with more input DNA, or add unique molecular identifiers (UMIs) before amplification so duplicates can be identified and removed computationally.",
+            "visual": "duplicates"
+          },
+          {
+            "id": "gcbias",
+            "label": "GC/AT bias",
+            "mechanism": "DNA polymerase has a harder time denaturing and copying through extremely GC-rich or AT-rich stretches, so those regions amplify less efficiently than the rest of the genome each cycle.",
+            "fingerprint": "Coverage becomes uneven across the genome: GC-rich and AT-rich regions are systematically under-represented, the same tilted coverage-vs-GC-content curve seen from tagmentation bias, but caused by the polymerase rather than the fragmentation enzyme.",
+            "mitigation": "Use fewer PCR cycles (or a PCR-free library prep when input allows), and a polymerase/buffer formulated for high-GC amplification.",
+            "gc": true
+          }
+        ]
+      },
       "qc": null
     },
     {

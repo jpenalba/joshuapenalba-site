@@ -455,10 +455,20 @@
     const botLeftCap = DNA.el('rect', { x: p0.x - coreW / 2, y: botY, width: capW, height: fh, fill: 'var(--reg-i5)', opacity: 0 }, botStrand);
     const botRightCap = DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: botY, width: capW, height: fh, fill: 'var(--reg-i7)', opacity: 0 }, botStrand);
 
-    // Primers (hidden until cycle 1's anneal step): one at the left end of
-    // the top strand, one at the right end of the bottom strand.
-    const primerTop = DNA.el('rect', { x: p0.x - coreW / 2 - 5, y: topY, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, topStrand);
-    const primerBot = DNA.el('rect', { x: p0.x + coreW / 2 + 1, y: botY, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, botStrand);
+    // Primers (hidden until cycle 1's anneal step): one near the tip of the
+    // top strand's left arm, one near the tip of the bottom strand's right
+    // arm -- where the actual P5/P7 sequence is, not at the core edge.
+    function pcrPrimerOnArm(parent, x0, y0, dx, dy, color) {
+      const t = 0.78, len = 6;
+      const cx = x0 + dx * t, cy = y0 + dy * t;
+      const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+      return DNA.el('rect', {
+        x: cx - len / 2, y: cy - fh / 2, width: len, height: fh, fill: color, opacity: 0,
+        transform: `rotate(${angleDeg.toFixed(2)} ${cx} ${cy})`
+      }, parent);
+    }
+    const primerTop = pcrPrimerOnArm(topStrand, p0.x - coreW / 2, topY + fh / 2, -armLength, -spread, 'var(--accent)');
+    const primerBot = pcrPrimerOnArm(botStrand, p0.x + coreW / 2, botY + fh / 2, armLength, spread, 'var(--accent)');
 
     // New complementary strand for the top-strand molecule, grown outward
     // from its primer during cycle 1's extend step -- scaleX anchored at
@@ -817,24 +827,72 @@
     }, svg).textContent = 'fusion junction';
   }
 
+  // Over-amplification: a handful of original molecules, each surrounded
+  // by a tight cluster of dim, identical copies -- most of what's there
+  // traces back to only a few starting templates.
+  function drawBreakItDuplicates(svg) {
+    const originX = [110, 320, 530];
+    const originY = [55, 85, 58];
+    const w = 30, capW = 6;
+    const dupOffsets = [[20, 16], [38, 8], [14, 30], [44, 26], [-18, 18], [28, -14], [-10, 30]];
+    originX.forEach((ox, i) => {
+      const oy = originY[i];
+      dupOffsets.forEach(([dx, dy]) => {
+        const g = pcrMoleculeWithCaps(svg, ox + dx, oy + dy, w * 0.55, capW * 0.55);
+        g.setAttribute('opacity', '0.3');
+      });
+      pcrMoleculeWithCaps(svg, ox, oy, w, capW);
+    });
+  }
+
+  // Unique reads fall off with every extra cycle once a library is mostly
+  // re-copying the same molecules rather than amplifying new ones.
+  function drawDuplicateRateChart(svg) {
+    DNA.el('line', { x1: TRACE_PAD, y1: TRACE_H - TRACE_PAD, x2: TRACE_W - TRACE_PAD, y2: TRACE_H - TRACE_PAD, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+    [0, 2, 4, 6, 8].forEach(c => {
+      const cx = TRACE_PAD + (c / 8) * (TRACE_W - TRACE_PAD * 2);
+      DNA.el('text', { x: cx, y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 16, fill: 'var(--ink-soft)' }, svg).textContent = c;
+    });
+    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = 'PCR cycle';
+
+    const topY = TRACE_PAD, botY = TRACE_H - TRACE_PAD, range = botY - topY;
+    const x = c => TRACE_PAD + (c / 8) * (TRACE_W - TRACE_PAD * 2);
+    const y = v => botY - v * range;
+
+    DNA.el('text', { x: TRACE_W - TRACE_PAD, y: topY - 6, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-faint)' }, svg).textContent = '% unique reads';
+
+    const n = 80;
+    let d = '';
+    for (let i = 0; i <= n; i++) {
+      const c = (i / n) * 8;
+      const v = 1 / (1 + Math.exp((c - 4.3) * 1.3));
+      d += (i === 0 ? 'M' : ' L') + ` ${x(c)} ${y(v)}`;
+    }
+    DNA.el('path', { d, fill: 'none', stroke: 'var(--reg-p7)', 'stroke-width': 2.4 }, svg);
+  }
+
   function buildBreakIt(mount, data) {
     mount.innerHTML = `
-      <div class="breakit-head">
-        <h3>${data.title}</h3>
-      </div>
-      <div class="breakit-tabs" role="tablist"></div>
-      <p class="breakit-text"></p>
-      <div class="breakit-visual">
-        <div class="stage-card breakit-stage-card">
-          <svg class="breakit-stage" viewBox="0 0 ${BREAKIT_W} ${BREAKIT_H}" role="img" aria-label="Diagram of the selected fragmentation failure"></svg>
-        </div>
-        <div class="data-panel">
-          <p class="data-panel-title mono breakit-chart-title"></p>
-          <svg class="breakit-chart" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fingerprint of the selected fragmentation failure"></svg>
-          <p class="breakit-mitigation"></p>
+      <button type="button" class="breakit-toggle" aria-expanded="false">
+        <span class="breakit-chevron">›</span><h3>${data.title}</h3>
+      </button>
+      <div class="breakit-body" hidden>
+        <div class="breakit-tabs" role="tablist"></div>
+        <p class="breakit-text"></p>
+        <div class="breakit-visual">
+          <div class="stage-card breakit-stage-card">
+            <svg class="breakit-stage" viewBox="0 0 ${BREAKIT_W} ${BREAKIT_H}" role="img" aria-label="Diagram of the selected failure"></svg>
+          </div>
+          <div class="data-panel">
+            <p class="data-panel-title mono breakit-chart-title"></p>
+            <svg class="breakit-chart" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fingerprint of the selected failure"></svg>
+            <p class="breakit-mitigation"></p>
+          </div>
         </div>
       </div>
     `;
+    const toggleBtn = mount.querySelector('.breakit-toggle');
+    const body = mount.querySelector('.breakit-body');
     const tabs = mount.querySelector('.breakit-tabs');
     const textEl = mount.querySelector('.breakit-text');
     const stageSvg = mount.querySelector('.breakit-stage');
@@ -876,6 +934,10 @@
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItChimera(stageSvg);
         buildTrace(chartSvg, f.traces || [f.trace]);
+      } else if (f.visual === 'duplicates') {
+        chartTitle.textContent = 'Unique reads vs. PCR cycle';
+        drawBreakItDuplicates(stageSvg);
+        drawDuplicateRateChart(chartSvg);
       } else {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItSizeFailure(stageSvg, f.scale);
@@ -883,7 +945,17 @@
       }
     }
 
-    show(data.failures[0].id);
+    let built = false;
+    toggleBtn.addEventListener('click', () => {
+      const willOpen = body.hidden;
+      body.hidden = !willOpen;
+      toggleBtn.setAttribute('aria-expanded', String(willOpen));
+      toggleBtn.classList.toggle('is-open', willOpen);
+      if (willOpen && !built) {
+        built = true;
+        show(data.failures[0].id);
+      }
+    });
   }
 
   // Optional "Fragmentation QC" sub-section -- a gel of under/perfectly/
