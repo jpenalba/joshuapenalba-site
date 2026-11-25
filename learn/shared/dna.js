@@ -119,6 +119,16 @@ const DNA = (() => {
     return g;
   }
 
+  // 3' A-tail marker, square variant -- used where it needs to read as
+  // visually distinct from the round 5' phosphate marker on the same
+  // fragment (e.g. one marker per corner of a blunt-ended fragment).
+  function aTailSquare(parent, { x, y, size = 10 } = {}) {
+    const g = group(parent, { class: 'dna-atail-square' });
+    el('rect', { x: x - size / 2, y: y - size / 2, width: size, height: size, rx: 2, fill: 'var(--mol-highlight)', stroke: 'var(--mol-backbone)', 'stroke-width': 1 }, g);
+    el('text', { x, y: y + size * 0.32, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': size * 0.75, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'A';
+    return g;
+  }
+
   // Open Y-shaped adapter (before PCR fills it in). side: 'left' | 'right'.
   function yAdapterOpen(parent, { x, y, armLength = 26, spread = 13, side = 'left', colorOuter, colorInner } = {}) {
     const dir = side === 'left' ? -1 : 1;
@@ -135,7 +145,7 @@ const DNA = (() => {
   }
 
   return {
-    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, fragmentOverhang, phosphateDot, aTailDot, yAdapterOpen,
+    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, fragmentOverhang, phosphateDot, aTailDot, aTailSquare, yAdapterOpen,
     REGIONS: {
       p5:    { key: 'p5',    label: 'P5', color: 'var(--reg-p5)' },
       i5:    { key: 'i5',    label: 'i5', color: 'var(--reg-i5)' },

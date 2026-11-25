@@ -117,15 +117,8 @@
     },
     {
       "id": "step3",
-      "title": "End repair",
-      "caption": "Shearing leaves messy ends; enzymes trim or fill them to blunt, phosphorylated ends.",
-      "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
-      "qc": null
-    },
-    {
-      "id": "step4",
-      "title": "A-tailing",
-      "caption": "A single A on each 3′ end lets adapters with a T overhang ligate, and stops fragments ligating to each other.",
+      "title": "End repair and A-tailing",
+      "caption": "Shearing leaves jagged ends. A DNA polymerase is used to fill in the complementary bases and a polynucleotide kinase (PNK) is used to add a phosphate group to the 5' end so they can be ligated to adapters. In the same reaction, an A base is added to the 3' end which allows the T overhang of the adapters to attach during the next step.",
       "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
       "qc": null
     },
