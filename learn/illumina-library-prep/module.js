@@ -297,47 +297,59 @@
     { x: 70, y: 198, w: 65 }, { x: 420, y: 205, w: 70 }, { x: 560, y: 188, w: 55 }
   ];
 
+  // One ligated adapter end: a short double-stranded "stem" (the primer
+  // binding site) runs parallel, just past the insert, before each strand
+  // peels off into its own single-stranded Y arm -- so the strands stay
+  // parallel for a beat rather than forking the instant they clear the
+  // insert.
+  function drawYAdapterEnd(svg, { x, y, dir, fh, fgap, stemW, stemColor, armLength, spread, colorTop, colorBottom }) {
+    const topY = y - fgap / 2 - fh / 2, botY = y + fgap / 2 + fh / 2;
+    const stemX = dir === -1 ? x - stemW : x;
+    DNA.fragmentOverhang(svg, { x: stemX, y, width: stemW, height: fh, gap: fgap, color: stemColor, overhangs: {} });
+    const armX = dir === -1 ? x - stemW : x + stemW;
+    DNA.yAdapterEnd(svg, { x: armX, topY, botY, dir, armLength, spread, strokeWidth: fh, colorTop, colorBottom });
+  }
+
   function drawAdapterLigation(svg) {
     LIGATION_BG.forEach(f => {
-      const fh = 5, fgap = 3;
-      const topY = f.y - fgap / 2 - fh / 2, botY = f.y + fgap / 2 + fh / 2;
+      const fh = 5, fgap = 3, stemW = 6, armLength = 12, spread = 7;
       DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height: fh, gap: fgap, overhangs: {} });
-      DNA.yAdapterEnd(svg, {
-        x: f.x, topY, botY, dir: -1, armLength: 14, spread: 8, strokeWidth: fh,
+      drawYAdapterEnd(svg, {
+        x: f.x, y: f.y, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
         colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
       });
-      DNA.yAdapterEnd(svg, {
-        x: f.x + f.w, topY, botY, dir: 1, armLength: 14, spread: 8, strokeWidth: fh,
+      drawYAdapterEnd(svg, {
+        x: f.x + f.w, y: f.y, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
         colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
       });
     });
 
     // Focal fragment: two equal strand bars (as in End repair/A-tailing),
-    // each continuing directly into its own Y-adapter arm -- top strand
-    // becomes the P5/P7 arm, bottom strand becomes the i5/i7 arm -- with
-    // the A/T overhang pairing that gives the ligation its specificity
-    // called out at each junction.
-    const fh = 12, fgap = 8;
-    const topY = MID_Y - fgap / 2 - fh / 2, botY = MID_Y + fgap / 2 + fh / 2;
+    // each continuing into a short primer-site stem and then its own
+    // Y-adapter arm -- top strand becomes the P5/P7 arm, bottom strand
+    // becomes the i5/i7 arm -- with the A/T overhang pairing that gives
+    // the ligation its specificity called out at each junction.
+    const fh = 12, fgap = 8, stemW = 18, armLength = 44, spread = 26;
     DNA.fragmentOverhang(svg, { x: FOCAL_X, y: MID_Y, width: FOCAL_W, height: fh, gap: fgap, overhangs: {} });
-    DNA.yAdapterEnd(svg, {
-      x: FOCAL_X, topY, botY, dir: -1, armLength: 50, spread: 26, strokeWidth: fh,
+    drawYAdapterEnd(svg, {
+      x: FOCAL_X, y: MID_Y, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
       colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
     });
-    DNA.yAdapterEnd(svg, {
-      x: FOCAL_X + FOCAL_W, topY, botY, dir: 1, armLength: 50, spread: 26, strokeWidth: fh,
+    drawYAdapterEnd(svg, {
+      x: FOCAL_X + FOCAL_W, y: MID_Y, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
       colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
     });
 
-    // A/T pairing stacked vertically right at each junction -- the A-tail
-    // (insert) directly against the T-overhang (adapter) it binds to.
+    // A/T pairing at each junction, diagonally opposite as in End repair/
+    // A-tailing: the insert's own A-tail sits top-right/bottom-left, and
+    // the adapter's complementary T-overhang sits top-left/bottom-right.
     const markerSize = 13;
-    const aY = MID_Y - markerSize / 2 - 1;
-    const tY = MID_Y + markerSize / 2 + 1;
-    DNA.aTailSquare(svg, { x: FOCAL_X, y: aY, size: markerSize });
-    DNA.tOverhangSquare(svg, { x: FOCAL_X, y: tY, size: markerSize });
-    DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: aY, size: markerSize });
-    DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W, y: tY, size: markerSize });
+    const topMarkerY = MID_Y - markerSize / 2 - 1;
+    const botMarkerY = MID_Y + markerSize / 2 + 1;
+    DNA.tOverhangSquare(svg, { x: FOCAL_X, y: topMarkerY, size: markerSize });
+    DNA.aTailSquare(svg, { x: FOCAL_X, y: botMarkerY, size: markerSize });
+    DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: topMarkerY, size: markerSize });
+    DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W, y: botMarkerY, size: markerSize });
   }
 
   function drawPCR(svg, cycles) {
@@ -586,17 +598,17 @@
   // that out-competes real library molecules during PCR.
   function drawBreakItAdapterDimer(svg) {
     const cx = BREAKIT_W / 2, cy = BREAKIT_H / 2;
-    const fh = 11, fgap = 7, armLength = 46, spread = 25;
+    const fh = 11, fgap = 7, stemW = 14, armLength = 38, spread = 25;
     const topY = cy - fgap / 2 - fh / 2, botY = cy + fgap / 2 + fh / 2;
     const w = 26;
     const leftX = cx - w / 2, rightX = cx + w / 2;
     DNA.fragmentOverhang(svg, { x: leftX, y: cy, width: w, height: fh, gap: fgap, overhangs: {} });
-    DNA.yAdapterEnd(svg, {
-      x: leftX, topY, botY, dir: -1, armLength, spread, strokeWidth: fh,
+    drawYAdapterEnd(svg, {
+      x: leftX, y: cy, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
       colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
     });
-    DNA.yAdapterEnd(svg, {
-      x: rightX, topY, botY, dir: 1, armLength, spread, strokeWidth: fh,
+    drawYAdapterEnd(svg, {
+      x: rightX, y: cy, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
       colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
     });
     DNA.el('text', {
@@ -610,17 +622,17 @@
   // ends -- a fusion the trace can't distinguish from a real long insert.
   function drawBreakItChimera(svg) {
     const cx = BREAKIT_W / 2, cy = BREAKIT_H / 2;
-    const fh = 11, fgap = 7, armLength = 46, spread = 25;
+    const fh = 11, fgap = 7, stemW = 14, armLength = 38, spread = 25;
     const topY = cy - fgap / 2 - fh / 2, botY = cy + fgap / 2 + fh / 2;
     const segW = 120, totalW = segW * 2;
     const leftX = cx - totalW / 2, rightX = cx + totalW / 2;
     DNA.fragmentOverhang(svg, { x: leftX, y: cy, width: totalW, height: fh, gap: fgap, overhangs: {} });
-    DNA.yAdapterEnd(svg, {
-      x: leftX, topY, botY, dir: -1, armLength, spread, strokeWidth: fh,
+    drawYAdapterEnd(svg, {
+      x: leftX, y: cy, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
       colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
     });
-    DNA.yAdapterEnd(svg, {
-      x: rightX, topY, botY, dir: 1, armLength, spread, strokeWidth: fh,
+    drawYAdapterEnd(svg, {
+      x: rightX, y: cy, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
       colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
     });
     const midX = leftX + segW;
