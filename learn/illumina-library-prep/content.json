@@ -128,6 +128,29 @@
       "caption": "Illumina adapters are then ligated on both ends of each DNA fragment. Illumina adapters carry all the information the sequencer needs: flow-cell binding sites, primer sites, and indexes. Adapters are often Y-shaped with a T-overhang so that it specifically binds to the A overhang and does not allow for more than one adapter to ligate.",
       "trace": { "peaks": [ { "center": 380, "height": 0.8, "width": 110 }, { "center": 125, "height": 0.18, "width": 20 } ] },
       "traceAnnotation": { "peakIndex": 1, "label": "adapter contamination" },
+      "breakIt": {
+        "title": "Break it: common ligation failures",
+        "failures": [
+          {
+            "id": "dimer",
+            "label": "Adapter dimers",
+            "mechanism": "When adapter is in excess relative to insert DNA — or insert input is very low — two Y-adapters can ligate directly to each other instead of each finding an insert.",
+            "fingerprint": "Produces a short, sharp peak around 120 bp, smaller than any real insert. It PCR-amplifies efficiently and can dominate the sequenced library, wasting reads on empty adapter-adapter products with no insert at all.",
+            "mitigation": "Increase the insert:adapter molar ratio before ligation, and run an extra, tighter bead clean-up afterward to pull the short dimer peak out of the library.",
+            "visual": "dimer",
+            "trace": { "center": 120, "width": 18, "height": 1.0 }
+          },
+          {
+            "id": "chimera",
+            "label": "Chimeric ligation",
+            "mechanism": "Too much insert DNA relative to adapter, or incomplete A-tailing, lets two blunt insert fragments ligate to each other before an adapter does — stitching two unrelated genomic regions into one molecule.",
+            "fingerprint": "Looks just like a longer real fragment, so the size trace alone can't tell them apart. It only surfaces after sequencing, as reads that appear to span an impossible genomic fusion or structural variant.",
+            "mitigation": "Keep insert DNA at the protocol's recommended concentration for ligation, and confirm A-tailing went to completion — a clean A/T-specific overhang prevents blunt-end insert-to-insert joining.",
+            "visual": "chimera",
+            "trace": { "center": 700, "width": 140, "height": 0.5 }
+          }
+        ]
+      },
       "qc": null
     },
     {
