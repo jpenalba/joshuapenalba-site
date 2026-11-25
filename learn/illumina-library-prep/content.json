@@ -235,10 +235,20 @@
     },
     {
       "id": "step9",
-      "title": "Pool, normalise, load",
-      "caption": "Libraries are pooled in equal amounts, denatured and loaded onto the flow cell.",
-      "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
-      "pool": { "samples": ["Sample A", "Sample B", "Sample C"], "shares": [0.34, 0.33, 0.33] },
+      "title": "Pool and final QC",
+      "caption": "Pool libraries according to the desired ratio. Libraries can be pooled into one large pool or multiple smaller pools but it is crucial that no two libraries share the same index",
+      "trace": {
+        "samples": [
+          { "center": 378, "width": 100, "height": 0.88, "color": "var(--reg-p5)" },
+          { "center": 385, "width": 102, "height": 0.92, "color": "var(--reg-read1)" },
+          { "center": 382, "width": 98, "height": 0.9, "color": "var(--reg-p7)" }
+        ]
+      },
+      "finalQC": {
+        "title": "Final QC",
+        "caption": "Prior to sending the sample for sequencing, a final quantification and size check should be run using a flourometer and an electropherogram, respectively. If the fragment size is still not as desired, you can run the pooled sample through a BluePippin. It is more important that there are no large fragments being sequenced as it can disrupt the process.",
+        "electropherogram": { "center": 382, "width": 55, "conc": "18.4 ng/µL", "molarity": "72 nM" }
+      },
       "qc": null
     }
   ],
