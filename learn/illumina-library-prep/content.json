@@ -180,14 +180,24 @@
           }
         ]
       },
-      "qc": null
-    },
-    {
-      "id": "step8",
-      "title": "Library QC",
-      "caption": "Check the size distribution and measure molarity by qPCR, which counts only molecules that can actually be sequenced.",
-      "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
-      "sizeMarkers": { "insert": 260, "library": 380 },
+      "libraryQC": {
+        "title": "Library QC (optional)",
+        "caption": "The quality of individual libraries can be assessed using gel electrophoresis, electropherograms (Bioanalyzer or TapeStation), or qPCR and quantified using a Fluorometer (Qubit). The gel electrophoresis is a rough check to see if the PCR worked and if the fragments are roughly the correct size. The electropherogram would give you a more accurate size distribution while the qPCR will actually give you the number of molecules. The latter methods are more expensive and will not scale well when doing many libraries. The quantification is useful if you want to normalize the library concentration and pool them more evenly but this is also time consuming for many samples. If the protocol has been optimized such that each library yields roughly the same amount, then the QC step can be skipped and libraries pooled using equal volumes rather than normalized at this step.",
+        "gel": {
+          "ladderBands": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+          "ladderBright": [500, 1000],
+          "samples": [
+            { "id": "liba", "label": ["Library A"], "center": 370, "width": 60, "height": 0.88, "color": "var(--reg-p5)" },
+            { "id": "libb", "label": ["Library B"], "center": 385, "width": 55, "height": 0.9, "color": "var(--reg-read1)" },
+            { "id": "libc", "label": ["Library C"], "center": 398, "width": 58, "height": 0.85, "color": "var(--reg-p7)" }
+          ]
+        },
+        "qpcr": { "ct": 22, "maxCycle": 40 }
+      },
+      "finalAnatomy": {
+        "title": "Anatomy of the final library",
+        "sizeMarkers": { "insert": 260, "library": 380 }
+      },
       "qc": null
     },
     {

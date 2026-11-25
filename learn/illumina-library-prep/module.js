@@ -572,6 +572,21 @@
     DNA.el('text', { x: (x1 + x2) / 2, y: y - 7, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = label;
   }
 
+  // "Anatomy of the final library" -- a callback sub-section consolidated
+  // into Library PCR, self-contained so it no longer needs special-casing
+  // by step id in the main per-step loop.
+  function buildFinalAnatomySection(mount, data) {
+    mount.innerHTML = `
+      <div class="breakit-head"><h3>${data.title}</h3></div>
+      <div class="stage-card final-anatomy-stage-card">
+        <svg class="final-anatomy-stage" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Anatomy of the final sequencer-ready library molecule"></svg>
+        <p class="region-info">Hover or tap a region above to see what it does.</p>
+        <p class="size-marker-widget mono">Insert ≈ ${data.sizeMarkers.insert} bp &nbsp;•&nbsp; Library ≈ ${data.sizeMarkers.library} bp</p>
+      </div>
+    `;
+    drawFinalAnatomy(mount.querySelector('.final-anatomy-stage'), mount.querySelector('.region-info'), data.sizeMarkers);
+  }
+
   function drawPooled(svg) {
     const poolColors = ['var(--reg-i7)', '#8A4F7D', '#4F7D8A'];
     const scale = 0.62;
@@ -710,6 +725,67 @@
       paths[s.id] = DNA.el('path', { d, fill: 'none', stroke: s.color, 'stroke-width': 2.4 }, svg);
     });
     return paths;
+  }
+
+  // A qPCR amplification curve: lag phase, exponential rise through a
+  // threshold, then plateau. Ct (the cycle at which the curve crosses the
+  // threshold) is what quantification actually reads off the plot.
+  function drawQPCRCurve(svg, data) {
+    const padL = 64, padR = 30, padT = 24, padB = 44;
+    const x0 = padL, x1 = STAGE_W - padR, y0 = STAGE_H - padB, y1 = padT;
+    DNA.el('line', { x1: x0, y1: y0, x2: x1, y2: y0, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+    DNA.el('line', { x1: x0, y1: y0, x2: x0, y2: y1, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+
+    const maxCycle = data.maxCycle || 40;
+    const xAt = c => x0 + (c / maxCycle) * (x1 - x0);
+    [0, 10, 20, 30, 40].forEach(c => {
+      DNA.el('text', { x: xAt(c), y: y0 + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = c;
+    });
+    DNA.el('text', { x: (x0 + x1) / 2, y: y0 + 38, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = 'PCR cycle';
+    DNA.el('text', {
+      x: padL - 46, y: (y0 + y1) / 2, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--ink-soft)',
+      transform: `rotate(-90 ${padL - 46} ${(y0 + y1) / 2})`
+    }, svg).textContent = 'Fluorescence (RFU)';
+
+    const ct = data.ct || 22, k = 1.3, baseline = 0.04, plateau = 0.92;
+    const yAt = v => y0 - v * (y0 - y1);
+    const thresholdV = baseline + (plateau - baseline) * 0.12;
+
+    const n = 100;
+    let d = '';
+    for (let i = 0; i <= n; i++) {
+      const c = (i / n) * maxCycle;
+      const v = baseline + (plateau - baseline) / (1 + Math.exp(-(c - ct) / k));
+      d += (i === 0 ? 'M' : ' L') + ` ${xAt(c)} ${yAt(v)}`;
+    }
+    DNA.el('path', { d, fill: 'none', stroke: 'var(--reg-p7)', 'stroke-width': 2.6 }, svg);
+
+    DNA.el('line', { x1: x0, y1: yAt(thresholdV), x2: x1, y2: yAt(thresholdV), stroke: 'var(--ink-faint)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, svg);
+    DNA.el('text', { x: x1, y: yAt(thresholdV) - 7, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-faint)' }, svg).textContent = 'threshold';
+
+    DNA.el('line', { x1: xAt(ct), y1: yAt(thresholdV), x2: xAt(ct), y2: y0, stroke: 'var(--reg-p7)', 'stroke-width': 1.3, 'stroke-dasharray': '3 3' }, svg);
+    DNA.el('text', { x: xAt(ct) + 8, y: yAt(thresholdV) + 20, 'text-anchor': 'start', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--reg-p7)', 'font-weight': 700 }, svg).textContent = `Ct ≈ ${ct}`;
+  }
+
+  // "Library QC (optional)" -- consolidated into Library PCR rather than a
+  // standalone step, same as Fragmentation QC. Two side-by-side images:
+  // a gel (does the library look roughly the right size?) and a qPCR
+  // amplification curve (how many molecules are actually there?).
+  function buildLibraryQC(mount, data) {
+    mount.innerHTML = `
+      <div class="breakit-head"><h3>${data.title}</h3></div>
+      <p class="breakit-text">${data.caption}</p>
+      <div class="libqc-visual">
+        <div class="stage-card">
+          <svg class="libqc-gel" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Gel electrophoresis of three successful libraries against a 100bp ladder"></svg>
+        </div>
+        <div class="stage-card">
+          <svg class="libqc-qpcr" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="qPCR amplification curve used to quantify a library"></svg>
+        </div>
+      </div>
+    `;
+    drawFragQCGel(mount.querySelector('.libqc-gel'), data.gel);
+    drawQPCRCurve(mount.querySelector('.libqc-qpcr'), data.qpcr);
   }
 
   // ---------- "Break it" mode: common fragmentation failures ----------
@@ -1062,7 +1138,6 @@
       <div class="step-visual">
         <div class="stage-card">
           <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
-          ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
           ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
           ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
         </div>
@@ -1073,6 +1148,8 @@
       </div>
       ${step.breakIt ? '<div class="breakit-block"></div>' : ''}
       ${step.fragQC ? '<div class="breakit-block fragqc-block"></div>' : ''}
+      ${step.libraryQC ? '<div class="breakit-block libqc-block"></div>' : ''}
+      ${step.finalAnatomy ? '<div class="breakit-block final-anatomy-block"></div>' : ''}
     `;
     container.appendChild(section);
 
@@ -1107,8 +1184,6 @@
           pcr.timeline.restart();
         }
       });
-    } else if (step.id === 'step8') {
-      drawFinalAnatomy(stageSvg, section.querySelector('.region-info'), step.sizeMarkers);
     } else if (step.id === 'step9') {
       section._poolColors = drawPooled(stageSvg);
     }
@@ -1133,9 +1208,6 @@
     }
     if (step.pcrCycles) {
       widgets.innerHTML = `<div class="pcr-widget">Each PCR cycle roughly doubles the number of molecules — and any bias with them.</div>`;
-    } else if (step.sizeMarkers) {
-      widgets.innerHTML = `<div class="size-marker-widget mono">Insert ≈ ${step.sizeMarkers.insert} bp &nbsp;•&nbsp; Library ≈ ${step.sizeMarkers.library} bp</div>`;
-      widgets.closest('.step').querySelector('.region-info').textContent = 'Hover or tap a region above to see what it does.';
     } else if (step.pool) {
       widgets.innerHTML = step.pool.samples.map((s, i) =>
         `<div class="pool-row"><span class="pool-swatch" style="background:${section._poolColors[i]}"></span><span class="mono">${s} — ${Math.round(step.pool.shares[i] * 100)}%</span></div>`
@@ -1147,6 +1219,12 @@
     }
     if (step.fragQC) {
       buildFragQC(section.querySelector('.fragqc-block'), step.fragQC);
+    }
+    if (step.libraryQC) {
+      buildLibraryQC(section.querySelector('.libqc-block'), step.libraryQC);
+    }
+    if (step.finalAnatomy) {
+      buildFinalAnatomySection(section.querySelector('.final-anatomy-block'), step.finalAnatomy);
     }
 
     // --- reveal on scroll ---
