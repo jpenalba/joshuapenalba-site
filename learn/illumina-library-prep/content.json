@@ -201,6 +201,39 @@
       "qc": null
     },
     {
+      "id": "step10",
+      "title": "Normalize",
+      "caption": "To ensure that the correct amounts of library is being added to the pool both the quantity and size distribution of the library should be normalized. The size distribution can be normalized either by a double-sided bead clean-up or gel excision (ex. using a BluePippin). The quantity measured using a fluorometer should be used  when calculating the exact amounts for pooling.",
+      "trace": {
+        "samples": [
+          { "center": 365, "width": 95, "height": 0.8, "color": "var(--reg-p5)" },
+          { "center": 385, "width": 100, "height": 0.92, "color": "var(--reg-read1)" },
+          { "center": 400, "width": 90, "height": 0.85, "color": "var(--reg-p7)" }
+        ]
+      },
+      "normalizeMethods": [
+        {
+          "id": "beadsel",
+          "label": "Double-sided bead size selection",
+          "summary": "Two rounds of magnetic-bead binding at different bead:sample ratios trim both size extremes.",
+          "detail": "A low bead ratio is added first and binds only the largest fragments, which are discarded; more beads are then added to the remaining supernatant to capture the target size range, and the leftover small-fragment supernatant is discarded. It needs no specialized equipment beyond a magnetic rack, but the exact size cut-offs are only approximate and depend on the bead ratios used."
+        },
+        {
+          "id": "gelexcision",
+          "label": "Gel excision",
+          "summary": "The library is run on a gel (or an automated cassette like a BluePippin) and the band at the target size is physically cut out and purified.",
+          "detail": "Because it separates and recovers a specific size directly from a real gel image, it gives a tighter, more precise size window than bead selection, and automated systems like the BluePippin make it reproducible across many samples. It takes more time and specialized equipment, and manual excision adds a contamination risk if not done carefully."
+        },
+        {
+          "id": "enzymaticnorm",
+          "label": "Enzymatic normalization",
+          "summary": "An enzyme mix that saturates at a fixed DNA amount selectively degrades the excess material in over-concentrated samples.",
+          "detail": "Libraries are incubated with a double-stranded-DNA-binding protein and nuclease pair that protects only a defined amount of DNA before saturating, so anything above that amount gets degraded -- bringing all samples down toward the same final concentration without needing to measure each one individually beforehand. It's fast and scales well across many samples, but it can only trim down overly concentrated libraries, not boost ones that started too dilute."
+        }
+      ],
+      "qc": null
+    },
+    {
       "id": "step9",
       "title": "Pool, normalise, load",
       "caption": "Libraries are pooled in equal amounts, denatured and loaded onto the flow cell.",

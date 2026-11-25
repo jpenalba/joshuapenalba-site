@@ -221,7 +221,48 @@
     captionLines(svg, ['Cuts and tags DNA', 'in a single step'], 118);
   }
 
-  const ILLUS_DRAWERS = { nanodrop: drawNanodrop, qubit: drawQubit, sonication: drawSonication, enzymatic: drawEnzymatic, tagmentation: drawTagmentation };
+  function drawBeadSelect(svg) {
+    DNA.el('path', { d: 'M55 20 L55 85 Q55 100 85 100 Q115 100 115 85 L115 20 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2 }, svg);
+    DNA.el('rect', { x: 118, y: 52, width: 13, height: 30, rx: 3, fill: 'var(--line-strong)' }, svg);
+    DNA.el('text', { x: 124.5, y: 71, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 8, fill: '#fff' }, svg).textContent = 'M';
+    [[109, 58], [112, 64], [107, 70], [111, 76]].forEach(([x, y]) => {
+      DNA.el('circle', { cx: x, cy: y, r: 2.6, fill: 'var(--ink-faint)' }, svg);
+    });
+    DNA.el('rect', { x: 62, y: 48, width: 34, height: 6, rx: 2, fill: 'var(--ink-faint)', opacity: 0.5 }, svg);
+    DNA.el('rect', { x: 62, y: 64, width: 20, height: 6, rx: 2, fill: 'var(--reg-read1)' }, svg);
+    DNA.el('rect', { x: 62, y: 80, width: 10, height: 6, rx: 2, fill: 'var(--ink-faint)', opacity: 0.5 }, svg);
+    captionLines(svg, ['Two bead ratios trim', 'both size extremes'], 118);
+  }
+
+  function drawGelExcision(svg) {
+    DNA.el('rect', { x: 45, y: 18, width: 80, height: 75, rx: 6, fill: 'var(--gel-bg)' }, svg);
+    [28, 38, 58, 68].forEach(y => {
+      DNA.el('rect', { x: 55, y, width: 16, height: 4, rx: 2, fill: 'var(--gel-band)', opacity: 0.5 }, svg);
+    });
+    DNA.el('rect', { x: 90, y: 46, width: 20, height: 5, rx: 2.5, fill: 'var(--reg-read1)' }, svg);
+    DNA.el('rect', { x: 84, y: 40, width: 32, height: 16, rx: 3, fill: 'none', stroke: 'var(--accent)', 'stroke-width': 1.6, 'stroke-dasharray': '3 2' }, svg);
+    captionLines(svg, ['Target band is cut', 'out and purified'], 118);
+  }
+
+  function drawEnzymaticNorm(svg) {
+    [[30, 50, 18], [30, 60, 14]].forEach(([x, y, w]) => {
+      DNA.el('rect', { x, y, width: w, height: 6, rx: 2, fill: 'var(--reg-p7)' }, svg);
+    });
+    DNA.el('rect', { x: 30, y: 70, width: 20, height: 6, rx: 2, fill: 'var(--reg-p7)' }, svg);
+    DNA.el('circle', { cx: 85, cy: 62, r: 15, fill: 'var(--reg-i7)', opacity: 0.45 }, svg);
+    DNA.el('text', { x: 85, y: 66, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 9, fill: 'var(--ink)' }, svg).textContent = 'Nxn';
+    DNA.el('path', { d: 'M54 62 L72 62 M68 58 L74 62 L68 66', stroke: 'var(--ink-soft)', 'stroke-width': 1.6, fill: 'none' }, svg);
+    DNA.el('path', { d: 'M98 62 L116 62 M112 58 L118 62 L112 66', stroke: 'var(--ink-soft)', 'stroke-width': 1.6, fill: 'none' }, svg);
+    [[120, 56], [120, 66], [120, 76]].forEach(([x, y]) => {
+      DNA.el('rect', { x, y, width: 16, height: 6, rx: 2, fill: 'var(--reg-read1)' }, svg);
+    });
+    captionLines(svg, ['Nuclease degrades DNA', 'above a fixed amount'], 118);
+  }
+
+  const ILLUS_DRAWERS = {
+    nanodrop: drawNanodrop, qubit: drawQubit, sonication: drawSonication, enzymatic: drawEnzymatic, tagmentation: drawTagmentation,
+    beadsel: drawBeadSelect, gelexcision: drawGelExcision, enzymaticnorm: drawEnzymaticNorm
+  };
 
   // Shared expandable "method" accordion used both for DNA-quantification
   // methods (mounted in the data panel) and fragmentation methods (mounted
@@ -585,6 +626,32 @@
       </div>
     `;
     drawFinalAnatomy(mount.querySelector('.final-anatomy-stage'), mount.querySelector('.region-info'), data.sizeMarkers);
+  }
+
+  // Three libraries at different concentrations: same kind of molecule
+  // (reusing the tiny capped-ends glyph from the PCR grid), just different
+  // numbers of them per cluster -- the thing that needs normalizing before
+  // pooling isn't the molecule itself, it's how many copies of it there are.
+  function drawNormalizeClusters(svg) {
+    const clusters = [
+      { x: 140, cols: 3, count: 3, label: 'Library A' },
+      { x: 350, cols: 4, count: 8, label: 'Library B' },
+      { x: 560, cols: 4, count: 15, label: 'Library C' }
+    ];
+    const molW = 36, capW = 7, cellW = 46, cellH = 20;
+    clusters.forEach(c => {
+      const rows = Math.ceil(c.count / c.cols);
+      const gridW = c.cols * cellW, gridH = rows * cellH;
+      const startX = c.x - gridW / 2 + cellW / 2, startY = MID_Y - gridH / 2 + cellH / 2;
+      for (let i = 0; i < c.count; i++) {
+        const col = i % c.cols, row = Math.floor(i / c.cols);
+        pcrMoleculeWithCaps(svg, startX + col * cellW, startY + row * cellH, molW, capW);
+      }
+      DNA.el('text', {
+        x: c.x, y: MID_Y + 78, 'text-anchor': 'middle',
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+      }, svg).textContent = c.label;
+    });
   }
 
   function drawPooled(svg) {
@@ -1138,7 +1205,7 @@
       <div class="step-visual">
         <div class="stage-card">
           <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
-          ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
+          ${step.fragMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
           ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
         </div>
         <div class="data-panel">
@@ -1184,12 +1251,24 @@
           pcr.timeline.restart();
         }
       });
+    } else if (step.id === 'step10') {
+      drawNormalizeClusters(stageSvg);
     } else if (step.id === 'step9') {
       section._poolColors = drawPooled(stageSvg);
     }
 
     // --- trace ---
-    if (traceSvg && step.trace) buildTrace(traceSvg, step.trace.peaks);
+    if (traceSvg && step.trace) {
+      if (step.trace.samples) {
+        drawTraceAxis(traceSvg);
+        step.trace.samples.forEach(s => {
+          const d = tracePathD([{ center: s.center, height: s.height, width: s.width }]);
+          DNA.el('path', { d, fill: 'none', stroke: s.color, 'stroke-width': 2.4 }, traceSvg);
+        });
+      } else {
+        buildTrace(traceSvg, step.trace.peaks);
+      }
+    }
     if (traceSvg && step.traceAnnotation) {
       drawTraceAnnotation(traceSvg, step.trace.peaks[step.traceAnnotation.peakIndex], step.traceAnnotation.label);
     }
@@ -1205,6 +1284,9 @@
     }
     if (step.fragMethods) {
       buildMethodAccordion(stageMethods, step.fragMethods, step.id);
+    }
+    if (step.normalizeMethods) {
+      buildMethodAccordion(stageMethods, step.normalizeMethods, step.id);
     }
     if (step.pcrCycles) {
       widgets.innerHTML = `<div class="pcr-widget">Each PCR cycle roughly doubles the number of molecules — and any bias with them.</div>`;
