@@ -463,6 +463,128 @@
     return paths;
   }
 
+  // ---------- "Break it" mode: common fragmentation failures ----------
+  const BREAKIT_W = 640, BREAKIT_H = 140;
+
+  // Under/over-shearing: the same handful of fragments, scaled larger or
+  // smaller than the target size -- the quickest way to show "too big" or
+  // "too small" without a full population smear.
+  function drawBreakItSizeFailure(svg, scale) {
+    const xs = [55, 190, 325, 430, 545];
+    const baseWidths = [55, 80, 40, 95, 65];
+    const ys = [55, 90, 60, 95, 45];
+    xs.forEach((x, i) => {
+      DNA.fragmentBar(svg, { x, y: ys[i], width: baseWidths[i] * scale, height: 14, color: 'var(--reg-p7)' });
+    });
+  }
+
+  // GC bias: a strand of alternating GC-rich / AT-rich stretches, cut mostly
+  // near the GC-rich edges rather than evenly along its length.
+  function drawBreakItGCBias(svg) {
+    const y = 78;
+    const segs = [
+      { x: 30, w: 70, gc: true }, { x: 100, w: 50, gc: false }, { x: 150, w: 65, gc: true },
+      { x: 215, w: 55, gc: false }, { x: 270, w: 70, gc: true }, { x: 340, w: 60, gc: false },
+      { x: 400, w: 75, gc: true }, { x: 475, w: 55, gc: false }, { x: 530, w: 60, gc: true }
+    ];
+    segs.forEach(s => {
+      DNA.el('rect', { x: s.x, y: y - 7, width: s.w, height: 14, fill: s.gc ? 'var(--reg-read1)' : 'var(--reg-i5)', opacity: 0.55 }, svg);
+    });
+    [100, 150, 270, 340, 400, 530].forEach(x => {
+      DNA.el('line', { x1: x, y1: y - 16, x2: x, y2: y + 16, stroke: 'var(--ink)', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, svg);
+    });
+    DNA.el('rect', { x: 30, y: 18, width: 12, height: 12, rx: 2, fill: 'var(--reg-read1)', opacity: 0.55 }, svg);
+    DNA.el('text', { x: 48, y: 28, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = 'GC-rich';
+    DNA.el('rect', { x: 125, y: 18, width: 12, height: 12, rx: 2, fill: 'var(--reg-i5)', opacity: 0.55 }, svg);
+    DNA.el('text', { x: 143, y: 28, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = 'AT-rich';
+  }
+
+  function drawGCCoverageChart(svg) {
+    DNA.el('line', { x1: TRACE_PAD, y1: TRACE_H - TRACE_PAD, x2: TRACE_W - TRACE_PAD, y2: TRACE_H - TRACE_PAD, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+    [0, 25, 50, 75, 100].forEach(g => {
+      const gx = TRACE_PAD + (g / 100) * (TRACE_W - TRACE_PAD * 2);
+      DNA.el('text', { x: gx, y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 16, fill: 'var(--ink-soft)' }, svg).textContent = g;
+    });
+    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = '% GC content';
+
+    const topY = TRACE_PAD, botY = TRACE_H - TRACE_PAD, range = botY - topY;
+    const x = g => TRACE_PAD + (g / 100) * (TRACE_W - TRACE_PAD * 2);
+    const covY = v => botY - v * 0.55 * range;
+
+    DNA.el('line', { x1: TRACE_PAD, y1: covY(1), x2: TRACE_W - TRACE_PAD, y2: covY(1), stroke: 'var(--ink-faint)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, svg);
+    DNA.el('text', { x: TRACE_W - TRACE_PAD, y: covY(1) - 7, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-faint)' }, svg).textContent = 'expected (even)';
+
+    const n = 100;
+    let d = '';
+    for (let i = 0; i <= n; i++) {
+      const g = (i / n) * 100;
+      const v = 1 - 0.65 * (((g - 50) / 50) ** 2);
+      d += (i === 0 ? 'M' : ' L') + ` ${x(g)} ${covY(v)}`;
+    }
+    DNA.el('path', { d, fill: 'none', stroke: 'var(--reg-p7)', 'stroke-width': 2.4 }, svg);
+  }
+
+  function buildBreakIt(mount, data) {
+    mount.innerHTML = `
+      <div class="breakit-head">
+        <h3>${data.title}</h3>
+      </div>
+      <div class="breakit-tabs" role="tablist"></div>
+      <p class="breakit-text"></p>
+      <div class="breakit-visual">
+        <div class="stage-card breakit-stage-card">
+          <svg class="breakit-stage" viewBox="0 0 ${BREAKIT_W} ${BREAKIT_H}" role="img" aria-label="Diagram of the selected fragmentation failure"></svg>
+        </div>
+        <div class="data-panel">
+          <p class="data-panel-title mono breakit-chart-title"></p>
+          <svg class="breakit-chart" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fingerprint of the selected fragmentation failure"></svg>
+          <p class="breakit-mitigation"></p>
+        </div>
+      </div>
+    `;
+    const tabs = mount.querySelector('.breakit-tabs');
+    const textEl = mount.querySelector('.breakit-text');
+    const stageSvg = mount.querySelector('.breakit-stage');
+    const chartSvg = mount.querySelector('.breakit-chart');
+    const chartTitle = mount.querySelector('.breakit-chart-title');
+    const mitigationEl = mount.querySelector('.breakit-mitigation');
+
+    const buttons = {};
+    data.failures.forEach(f => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'breakit-tab';
+      btn.textContent = f.label;
+      btn.setAttribute('role', 'tab');
+      btn.addEventListener('click', () => show(f.id));
+      tabs.appendChild(btn);
+      buttons[f.id] = btn;
+    });
+
+    function show(id) {
+      const f = data.failures.find(x => x.id === id);
+      Object.entries(buttons).forEach(([bid, b]) => {
+        b.classList.toggle('is-active', bid === id);
+        b.setAttribute('aria-selected', String(bid === id));
+      });
+      textEl.textContent = f.mechanism + ' ' + f.fingerprint;
+      mitigationEl.innerHTML = `<strong>Mitigation:</strong> ${f.mitigation}`;
+      stageSvg.innerHTML = '';
+      chartSvg.innerHTML = '';
+      if (f.gc) {
+        chartTitle.textContent = 'Coverage vs. GC content';
+        drawBreakItGCBias(stageSvg);
+        drawGCCoverageChart(chartSvg);
+      } else {
+        chartTitle.textContent = 'DNA fragment distribution';
+        drawBreakItSizeFailure(stageSvg, f.scale);
+        buildTrace(chartSvg, [f.trace]);
+      }
+    }
+
+    show(data.failures[0].id);
+  }
+
   // ---------- build each step section ----------
   // Reveal is driven by a direct scroll-position check rather than
   // IntersectionObserver alone: a fast or instant scroll (keyboard "End", a
@@ -521,6 +643,7 @@
           <div class="step-widgets"></div>
         </div>
       </div>
+      ${step.breakIt ? '<div class="breakit-block"></div>' : ''}
     `;
     container.appendChild(section);
 
@@ -636,6 +759,10 @@
       widgets.innerHTML = step.pool.samples.map((s, i) =>
         `<div class="pool-row"><span class="pool-swatch" style="background:${section._poolColors[i]}"></span><span class="mono">${s} — ${Math.round(step.pool.shares[i] * 100)}%</span></div>`
       ).join('');
+    }
+
+    if (step.breakIt) {
+      buildBreakIt(section.querySelector('.breakit-block'), step.breakIt);
     }
 
     // --- reveal on scroll ---
