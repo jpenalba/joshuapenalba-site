@@ -352,17 +352,135 @@
     DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W, y: botMarkerY, size: markerSize });
   }
 
-  function drawPCR(svg, cycles) {
-    [-34, -17, 17, 34].forEach(dy => {
-      DNA.fragmentBar(svg, { x: FOCAL_X, y: MID_Y + dy, width: FOCAL_W, height: 9, color: 'var(--line-strong)' });
-    });
-    DNA.regionRow(svg, { x: ROW_X, y: MID_Y, height: ROW_H, regions: REGION_DEFS });
+  // ---------- Library PCR: replayable exponential-amplification animation ----------
+  // A single molecule (the Y-adapter-ligated fragment carried over from Step
+  // 5) is placed on a 16x16 grid of "slots" in a fixed local coordinate
+  // space; a camera group then scales/pans over that space so cycle 1 reads
+  // as a large, detailed close-up and cycle 8 reads as a zoomed-out box
+  // packed with 256 tiny molecules -- one continuous zoom standing in for
+  // "slowly fill the box," without animating 256 molecules individually.
+  const PCR_COLS = 16, PCR_ROWS = 16, PCR_CELL_W = 40, PCR_CELL_H = 22;
+  const PCR_VIEW_W = 660, PCR_VIEW_H = 178, PCR_VIEW_X = (STAGE_W - PCR_VIEW_W) / 2, PCR_VIEW_Y = 44;
+
+  function pcrSlotPos(i) {
+    const col = i % PCR_COLS, row = Math.floor(i / PCR_COLS);
+    return { x: col * PCR_CELL_W + PCR_CELL_W / 2, y: row * PCR_CELL_H + PCR_CELL_H / 2 };
+  }
+
+  function pcrCameraFor(activeCount) {
+    const rows = Math.max(1, Math.ceil(activeCount / PCR_COLS));
+    const cols = rows === 1 ? activeCount : PCR_COLS;
+    const bboxW = cols * PCR_CELL_W, bboxH = rows * PCR_CELL_H;
+    const s = Math.min(6, PCR_VIEW_W / bboxW, PCR_VIEW_H / bboxH);
+    return {
+      s,
+      tx: PCR_VIEW_X + PCR_VIEW_W / 2 - s * (bboxW / 2),
+      ty: PCR_VIEW_Y + PCR_VIEW_H / 2 - s * (bboxH / 2)
+    };
+  }
+
+  function pcrSetCamera(cameraGroup, cam) {
+    cameraGroup.setAttribute('transform', `translate(${cam.tx},${cam.ty}) scale(${cam.s})`);
+  }
+
+  function pcrBluntMolecule(parent, x, y, w) {
+    const g = DNA.group(parent, { class: 'pcr-molecule' });
+    const fh = 3, fgap = 2;
+    DNA.el('rect', { x: x - w / 2, y: y - fgap / 2 - fh, width: w, height: fh, rx: 1, fill: 'var(--mol-backbone)' }, g);
+    DNA.el('rect', { x: x - w / 2, y: y + fgap / 2, width: w, height: fh, rx: 1, fill: 'var(--mol-backbone)' }, g);
+    return g;
+  }
+
+  function buildPCRAnimation(svg, cycles) {
+    svg.innerHTML = '';
     const counter = DNA.el('text', {
-      x: STAGE_W / 2, y: 30, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace",
+      x: STAGE_W / 2, y: 22, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace",
       'font-size': 15, fill: 'var(--ink-soft)'
     }, svg);
-    counter.textContent = `Cycle 0 / ${cycles}`;
-    return counter;
+    counter.textContent = `Cycle 0 of ${cycles}`;
+
+    const camera = DNA.group(svg, { class: 'pcr-camera' });
+    const initCam = pcrCameraFor(1);
+    pcrSetCamera(camera, initCam);
+    const cam = { s: initCam.s, tx: initCam.tx, ty: initCam.ty };
+
+    const fh = 3, fgap = 2, armLength = 9, spread = 6, coreW = 30, bluntW = 30;
+    const p0 = pcrSlotPos(0), p1 = pcrSlotPos(1);
+
+    // Seed molecule: the Y-adapter-ligated fragment from Step 5, drawn as two
+    // independent strand groups so they can be pulled apart on denaturing.
+    const topStrand = DNA.group(camera, { class: 'pcr-top-strand' });
+    const botStrand = DNA.group(camera, { class: 'pcr-bot-strand' });
+    DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y - fgap / 2 - fh, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, topStrand);
+    DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y + fgap / 2, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, botStrand);
+    const topLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: p0.y - fgap / 2 - fh / 2, x2: p0.x - coreW / 2 - armLength, y2: p0.y - fgap / 2 - fh / 2 - spread, stroke: 'var(--reg-p5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
+    const topRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: p0.y - fgap / 2 - fh / 2, x2: p0.x + coreW / 2 + armLength, y2: p0.y - fgap / 2 - fh / 2 - spread, stroke: 'var(--reg-p7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
+    const botLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: p0.y + fgap / 2 + fh / 2, x2: p0.x - coreW / 2 - armLength, y2: p0.y + fgap / 2 + fh / 2 + spread, stroke: 'var(--reg-i5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
+    const botRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: p0.y + fgap / 2 + fh / 2, x2: p0.x + coreW / 2 + armLength, y2: p0.y + fgap / 2 + fh / 2 + spread, stroke: 'var(--reg-i7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
+
+    // Primers (hidden until cycle 1's anneal step): one at the left end of
+    // the top strand, one at the right end of the bottom strand.
+    const primerTop = DNA.el('rect', { x: p0.x - coreW / 2 - 4, y: p0.y - fgap / 2 - fh, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, topStrand);
+    const primerBot = DNA.el('rect', { x: p0.x + coreW / 2, y: p0.y + fgap / 2, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, botStrand);
+
+    // New complementary strands, grown outward from each primer during
+    // cycle 1's extend step -- scaleX anchored at the primer end so the bar
+    // reads as "growing" rather than resizing in place.
+    const newBarForTop = DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y + fgap / 2, width: coreW, height: fh, fill: 'var(--accent)' }, topStrand);
+    const newBarForBot = DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y - fgap / 2 - fh, width: coreW, height: fh, fill: 'var(--accent)' }, botStrand);
+    gsap.set(newBarForTop, { scaleX: 0, transformOrigin: 'left center' });
+    gsap.set(newBarForBot, { scaleX: 0, transformOrigin: 'right center' });
+
+    // Pre-built molecules for every slot beyond the first two -- hidden
+    // until the cycle they're born in pops them into view. Pre-building
+    // (rather than drawing on the fly) is what makes the whole sequence
+    // cleanly replayable: nothing is created or destroyed during playback,
+    // only animated.
+    const laterMolecules = [];
+    for (let i = 2; i < PCR_COLS * PCR_ROWS; i++) {
+      const p = pcrSlotPos(i);
+      const g = pcrBluntMolecule(camera, p.x, p.y, bluntW);
+      gsap.set(g, { opacity: 0, scale: 0.3, transformOrigin: '50% 50%' });
+      laterMolecules.push(g);
+    }
+
+    const tl = gsap.timeline({ paused: true });
+    function camTo(activeCount, duration) {
+      const target = pcrCameraFor(activeCount);
+      tl.to(cam, { s: target.s, tx: target.tx, ty: target.ty, duration, onUpdate: () => pcrSetCamera(camera, cam) }, '<');
+    }
+
+    // --- Cycle 1: denature -> anneal (one primer per strand) -> extend -> settle ---
+    tl.call(() => { counter.textContent = `Cycle 0 of ${cycles}`; }, null, 0)
+      .to(topStrand, { y: -6, duration: 0.7, ease: 'power1.inOut' })
+      .to(botStrand, { y: 6, duration: 0.7, ease: 'power1.inOut' }, '<')
+      .to([primerTop, primerBot], { opacity: 1, duration: 0.35 })
+      .to(newBarForTop, { scaleX: 1, duration: 0.9, ease: 'none' }, '>')
+      .to(newBarForBot, { scaleX: 1, duration: 0.9, ease: 'none' }, '<')
+      .to([topLeftArm, topRightArm, botLeftArm, botRightArm, primerTop, primerBot], { opacity: 0, duration: 0.3 }, '<0.5')
+      .to([newBarForTop, newBarForBot], { fill: 'var(--mol-backbone)', duration: 0.3 }, '<')
+      .call(() => { counter.textContent = `Cycle 1 of ${cycles}`; })
+      .to(topStrand, { x: 0, y: 0, duration: 0.6, ease: 'power1.inOut' }, '>')
+      .to(botStrand, { x: p1.x - p0.x, y: 0, duration: 0.6, ease: 'power1.inOut' }, '<');
+    camTo(2, 0.6);
+
+    // --- Cycles 2-8: primers now anneal at both ends of every molecule;
+    // shown as a generic doubling pulse rather than redrawing the full
+    // denature/anneal/extend sequence on every one of up to 128 molecules. ---
+    for (let c = 2; c <= cycles; c++) {
+      const before = Math.min(1 << (c - 1), PCR_COLS * PCR_ROWS);
+      const after = Math.min(1 << c, PCR_COLS * PCR_ROWS);
+      const visibleBefore = [topStrand, botStrand, ...laterMolecules.slice(0, before - 2)];
+      tl.to(visibleBefore, { scale: 1.12, duration: 0.18, yoyo: true, repeat: 1, transformOrigin: '50% 50%' }, '>0.1');
+      const newOnes = laterMolecules.slice(before - 2, after - 2);
+      if (newOnes.length) {
+        tl.to(newOnes, { opacity: 1, scale: 1, duration: 0.4, stagger: 0.008 }, '<0.15');
+      }
+      camTo(after, 0.5);
+      tl.call(() => { counter.textContent = `Cycle ${c} of ${cycles}`; }, null, '<0.2');
+    }
+
+    return { timeline: tl, counter };
   }
 
   function drawFinalAnatomy(svg, regionInfoEl, sizeMarkers) {
@@ -822,6 +940,7 @@
           <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
           ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
           ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
+          ${step.pcrCycles ? '<button type="button" class="pcr-replay-btn mono">Replay</button>' : ''}
         </div>
         <div class="data-panel">
           ${step.trace ? `<p class="data-panel-title mono">DNA fragment distribution</p><svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
@@ -847,11 +966,12 @@
       drawSmear(stageSvg, 'ragged');
     } else if (step.id === 'step3') {
       drawSmear(stageSvg, 'blunt');
-    } else if (step.id === 'step5' || step.id === 'step6') {
+    } else if (step.id === 'step5') {
       drawAdapterLigation(stageSvg);
     } else if (step.id === 'step7') {
-      section._pcrCounter = drawPCR(stageSvg, step.pcrCycles);
-      section._pcrCycles = step.pcrCycles;
+      const pcr = buildPCRAnimation(stageSvg, step.pcrCycles);
+      section._pcrTimeline = pcr.timeline;
+      section.querySelector('.pcr-replay-btn').addEventListener('click', () => pcr.timeline.restart());
     } else if (step.id === 'step8') {
       drawFinalAnatomy(stageSvg, section.querySelector('.region-info'), step.sizeMarkers);
     } else if (step.id === 'step9') {
@@ -876,33 +996,7 @@
     if (step.fragMethods) {
       buildMethodAccordion(stageMethods, step.fragMethods, step.id);
     }
-    if (step.beadSelect) {
-      const min0 = step.beadSelect.defaultMin, max0 = step.beadSelect.defaultMax;
-      widgets.innerHTML = `
-        <div class="bead-widget">
-          <label class="bead-label mono">Lower cut-off: <span class="bead-min-val">${min0}</span> bp</label>
-          <input type="range" class="bead-min" min="0" max="500" step="10" value="${min0}">
-          <label class="bead-label mono">Upper cut-off: <span class="bead-max-val">${max0}</span> bp</label>
-          <input type="range" class="bead-max" min="200" max="1000" step="10" value="${max0}">
-        </div>
-      `;
-      const shadeLeft = DNA.el('rect', { x: TRACE_PAD, y: 0, width: 0, height: TRACE_H - TRACE_PAD, fill: 'var(--bg)', opacity: 0.72 }, traceSvg);
-      const shadeRight = DNA.el('rect', { x: 0, y: 0, width: 0, height: TRACE_H - TRACE_PAD, fill: 'var(--bg)', opacity: 0.72 }, traceSvg);
-      function updateShade(min, max) {
-        shadeLeft.setAttribute('width', Math.max(0, bpToX(min) - TRACE_PAD));
-        shadeRight.setAttribute('x', bpToX(max));
-        shadeRight.setAttribute('width', Math.max(0, (TRACE_W - TRACE_PAD) - bpToX(max)));
-      }
-      updateShade(min0, max0);
-      widgets.querySelector('.bead-min').addEventListener('input', (e) => {
-        widgets.querySelector('.bead-min-val').textContent = e.target.value;
-        updateShade(+e.target.value, +widgets.querySelector('.bead-max').value);
-      });
-      widgets.querySelector('.bead-max').addEventListener('input', (e) => {
-        widgets.querySelector('.bead-max-val').textContent = e.target.value;
-        updateShade(+widgets.querySelector('.bead-min').value, +e.target.value);
-      });
-    } else if (step.pcrCycles) {
+    if (step.pcrCycles) {
       widgets.innerHTML = `<div class="pcr-widget">Each PCR cycle roughly doubles the number of molecules — and any bias with them.</div>`;
     } else if (step.sizeMarkers) {
       widgets.innerHTML = `<div class="size-marker-widget mono">Insert ≈ ${step.sizeMarkers.insert} bp &nbsp;•&nbsp; Library ≈ ${step.sizeMarkers.library} bp</div>`;
@@ -925,21 +1019,12 @@
       gsap.set(section, { opacity: 0, y: 18 });
       section._onReveal = () => {
         gsap.to(section, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
-        if (step.id === 'step7') animatePcrCounter(section);
+        if (step.id === 'step7') section._pcrTimeline.play();
       };
       pending.push(section);
     } else if (step.id === 'step7') {
-      section._pcrCounter.textContent = `Cycle ${step.pcrCycles} / ${step.pcrCycles}`;
+      section._pcrTimeline.progress(1);
     }
   });
   checkReveal();
-
-  function animatePcrCounter(section) {
-    let cycle = 0;
-    const timer = setInterval(() => {
-      cycle = Math.min(section._pcrCycles, cycle + 1);
-      section._pcrCounter.textContent = `Cycle ${cycle} / ${section._pcrCycles}`;
-      if (cycle >= section._pcrCycles) clearInterval(timer);
-    }, 300);
-  }
 })();
