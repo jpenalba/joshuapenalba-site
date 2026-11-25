@@ -203,12 +203,12 @@
     {
       "id": "step10",
       "title": "Normalize",
-      "caption": "To ensure that the correct amounts of library is being added to the pool both the quantity and size distribution of the library should be normalized. The size distribution can be normalized either by a double-sided bead clean-up or gel excision (ex. using a BluePippin). The quantity measured using a fluorometer should be used  when calculating the exact amounts for pooling.",
+      "caption": "To ensure that the correct amounts of library is being added to the pool both the quantity and size distribution of the library should be normalized. The size distribution can be normalized either by a double-sided bead clean-up or gel excision (ex. using a BluePippin). The quantity measured using a fluorometer should be used  when calculating the exact amounts for pooling. If the protocol has been optimized and yielding similar amounts and size distributions, this step may be skipped.",
       "trace": {
         "samples": [
-          { "center": 365, "width": 95, "height": 0.8, "color": "var(--reg-p5)" },
-          { "center": 385, "width": 100, "height": 0.92, "color": "var(--reg-read1)" },
-          { "center": 400, "width": 90, "height": 0.85, "color": "var(--reg-p7)" }
+          { "center": 310, "width": 65, "height": 0.75, "color": "var(--reg-p5)" },
+          { "center": 395, "width": 100, "height": 0.95, "color": "var(--reg-read1)" },
+          { "center": 470, "width": 130, "height": 0.6, "color": "var(--reg-p7)" }
         ]
       },
       "normalizeMethods": [
