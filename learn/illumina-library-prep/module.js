@@ -457,9 +457,12 @@
     // each strand has finished straightening): one at the far end of the
     // top strand's left arm, one at the far end of the bottom strand's
     // right arm -- the actual P5/P7 sequence, not the core edge.
+    // The primer anneals to the template strand but, being antiparallel,
+    // physically sits on the opposite (complementary) row -- the row the
+    // new strand it seeds will occupy -- not on the template's own row.
     const primerLen = 6;
-    const primerTop = DNA.el('rect', { x: p0.x - bluntW / 2 - primerLen / 2, y: topY, width: primerLen, height: fh, fill: 'var(--accent)', opacity: 0 }, topStrand);
-    const primerBot = DNA.el('rect', { x: p0.x + bluntW / 2 - primerLen / 2, y: botY, width: primerLen, height: fh, fill: 'var(--accent)', opacity: 0 }, botStrand);
+    const primerTop = DNA.el('rect', { x: p0.x - bluntW / 2, y: botY, width: primerLen, height: fh, fill: 'var(--accent)', opacity: 0 }, topStrand);
+    const primerBot = DNA.el('rect', { x: p0.x + bluntW / 2 - primerLen, y: topY, width: primerLen, height: fh, fill: 'var(--accent)', opacity: 0 }, botStrand);
 
     // New complementary strand for the top-strand molecule, grown outward
     // from its primer during cycle 1's extend step -- scaleX anchored at
