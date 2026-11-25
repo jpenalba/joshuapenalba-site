@@ -326,14 +326,15 @@
     });
     DNA.fragmentOverhang(svg, { x: FOCAL_X, y: MID_Y, width: FOCAL_W, height: fh, gap: fgap, overhangs: {} });
 
-    const topY = MID_Y - fgap / 2 - fh / 2;
-    const botY = MID_Y + fgap / 2 + fh / 2;
-    DNA.phosphateDot(svg, { x: FOCAL_X, y: topY, r: 7 });
-    DNA.aTailSquare(svg, { x: FOCAL_X, y: botY, size: 13 });
-    DNA.tOverhangSquare(svg, { x: FOCAL_X - 13, y: botY, size: 13 });
-    DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: topY, size: 13 });
-    DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W + 13, y: topY, size: 13 });
-    DNA.phosphateDot(svg, { x: FOCAL_X + FOCAL_W, y: botY, r: 7 });
+    // A/T pairing stacked vertically right at each junction -- the A-tail
+    // (insert) directly against the T-overhang (adapter) it binds to.
+    const markerSize = 13;
+    const aY = MID_Y - markerSize / 2 - 1;
+    const tY = MID_Y + markerSize / 2 + 1;
+    DNA.aTailSquare(svg, { x: FOCAL_X, y: aY, size: markerSize });
+    DNA.tOverhangSquare(svg, { x: FOCAL_X, y: tY, size: markerSize });
+    DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: aY, size: markerSize });
+    DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W, y: tY, size: markerSize });
   }
 
   function drawPCR(svg, cycles) {
