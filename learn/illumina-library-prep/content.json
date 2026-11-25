@@ -74,7 +74,7 @@
     {
       "id": "stepFragQC",
       "title": "Fragmentation QC (optional)",
-      "caption": "When optimizing a fragmentation protocol for the first time or trying out samples from different species, it may be useful to check the fragmentation using a gel electrophoresis. Under-sheared samples can undergo further shearing but over-sheared samples cannot be recovered. When samples are over-sheared, the small fragments will likely be lost during bead clean-ups.",
+      "caption": "When optimizing a fragmentation protocol for the first time or trying out samples from different species, it may be useful to check the fragmentation using a gel electrophoresis. Under-sheared samples can undergo further shearing but over-sheared samples cannot be recovered. When samples are over-sheared, the small fragments will likely be lost during bead clean-ups. Under-sheared samples can later be standardized using a size selection step.",
       "trace": null,
       "fragQCGel": {
         "ladderBands": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
