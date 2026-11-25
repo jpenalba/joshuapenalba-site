@@ -275,14 +275,17 @@
         DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height: 7, gap: 5, overhangs: f.oh });
         return;
       }
-      DNA.fragmentBar(svg, { x: f.x, y: f.y, width: f.w, height: 16, color: 'var(--mol-backbone)' });
-      if (endStyle === 'repaired' || endStyle === 'atail') {
-        DNA.phosphateDot(svg, { x: f.x + 4, y: f.y - 11, r: 6 });
-        DNA.phosphateDot(svg, { x: f.x + f.w - 4, y: f.y + 11, r: 6 });
-      }
-      if (endStyle === 'atail') {
-        DNA.aTailDot(svg, { x: f.x + f.w + 8, y: f.y, r: 7 });
-      }
+      // Blunt, end-repaired and A-tailed: two equal-length strand bars
+      // (zero overhang), each strand's 5' phosphate and 3' A diagonally
+      // opposite each other, since the strands are antiparallel.
+      const height = 7, gap = 5;
+      DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height, gap, overhangs: {} });
+      const topY = f.y - gap / 2 - height / 2;
+      const botY = f.y + gap / 2 + height / 2;
+      DNA.phosphateDot(svg, { x: f.x, y: topY, r: 6 });
+      DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
+      DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
+      DNA.phosphateDot(svg, { x: f.x + f.w, y: botY, r: 6 });
     });
   }
 
@@ -716,9 +719,7 @@
     } else if (step.id === 'step2') {
       drawSmear(stageSvg, 'ragged');
     } else if (step.id === 'step3') {
-      drawSmear(stageSvg, 'repaired');
-    } else if (step.id === 'step4') {
-      drawSmear(stageSvg, 'atail');
+      drawSmear(stageSvg, 'blunt');
     } else if (step.id === 'step5' || step.id === 'step6') {
       drawAdapterLigation(stageSvg);
     } else if (step.id === 'step7') {
