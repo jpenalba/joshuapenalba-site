@@ -585,6 +585,61 @@
     show(data.failures[0].id);
   }
 
+  // Optional "Fragmentation QC" sub-section -- a gel of under/perfectly/
+  // over-sheared samples cross-linked to their size-distribution curves,
+  // consolidated into the Fragmentation step rather than its own step.
+  function buildFragQC(mount, data) {
+    mount.innerHTML = `
+      <div class="breakit-head"><h3>${data.title}</h3></div>
+      <p class="breakit-text">${data.caption}</p>
+      <div class="fragqc-visual">
+        <div class="stage-card">
+          <svg class="fragqc-stage" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Gel electrophoresis comparing under-, perfectly- and over-sheared samples"></svg>
+        </div>
+        <div class="data-panel">
+          <p class="data-panel-title mono">DNA fragment distribution</p>
+          <svg class="fragqc-chart" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Size-distribution curves for under-, perfectly- and over-sheared samples"></svg>
+          <div class="fragqc-legend"></div>
+        </div>
+      </div>
+    `;
+    const stageSvg = mount.querySelector('.fragqc-stage');
+    const chartSvg = mount.querySelector('.fragqc-chart');
+    const legendMount = mount.querySelector('.fragqc-legend');
+
+    const hitRects = drawFragQCGel(stageSvg, data.gel);
+    const tracePaths = drawFragQCTraces(chartSvg, data.gel);
+
+    const highlight = (id) => {
+      Object.entries(tracePaths).forEach(([pid, p]) => {
+        p.setAttribute('stroke-width', pid === id ? 3.6 : 2.4);
+        p.setAttribute('opacity', pid === id ? 1 : 0.3);
+      });
+    };
+    const reset = () => {
+      Object.values(tracePaths).forEach(p => { p.setAttribute('stroke-width', 2.4); p.setAttribute('opacity', 1); });
+    };
+
+    data.gel.samples.forEach(s => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'fragqc-legend-row';
+      row.innerHTML = `<span class="pool-swatch" style="background:${s.color}"></span><span class="mono">${joinLabel(s.label)}</span>`;
+      row.addEventListener('pointerenter', () => highlight(s.id));
+      row.addEventListener('focus', () => highlight(s.id));
+      row.addEventListener('pointerleave', reset);
+      row.addEventListener('blur', reset);
+      legendMount.appendChild(row);
+      const hit = hitRects[s.id];
+      if (hit) {
+        hit.addEventListener('pointerenter', () => highlight(s.id));
+        hit.addEventListener('focus', () => highlight(s.id));
+        hit.addEventListener('pointerleave', reset);
+        hit.addEventListener('blur', reset);
+      }
+    });
+  }
+
   // ---------- build each step section ----------
   // Reveal is driven by a direct scroll-position check rather than
   // IntersectionObserver alone: a fast or instant scroll (keyboard "End", a
@@ -639,11 +694,12 @@
           ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
         </div>
         <div class="data-panel">
-          ${(step.trace || step.fragQCGel) ? `<p class="data-panel-title mono">DNA fragment distribution</p><svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
+          ${step.trace ? `<p class="data-panel-title mono">DNA fragment distribution</p><svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
           <div class="step-widgets"></div>
         </div>
       </div>
       ${step.breakIt ? '<div class="breakit-block"></div>' : ''}
+      ${step.fragQC ? '<div class="breakit-block fragqc-block"></div>' : ''}
     `;
     container.appendChild(section);
 
@@ -659,8 +715,6 @@
       drawGel(stageSvg, step.gel);
     } else if (step.id === 'step2') {
       drawSmear(stageSvg, 'ragged');
-    } else if (step.id === 'stepFragQC') {
-      section._gelHitRects = drawFragQCGel(stageSvg, step.fragQCGel);
     } else if (step.id === 'step3') {
       drawSmear(stageSvg, 'repaired');
     } else if (step.id === 'step4') {
@@ -678,39 +732,6 @@
 
     // --- trace ---
     if (traceSvg && step.trace) buildTrace(traceSvg, step.trace.peaks);
-    if (traceSvg && step.fragQCGel) {
-      const tracePaths = drawFragQCTraces(traceSvg, step.fragQCGel);
-      const highlight = (id) => {
-        Object.entries(tracePaths).forEach(([pid, p]) => {
-          p.setAttribute('stroke-width', pid === id ? 3.6 : 2.4);
-          p.setAttribute('opacity', pid === id ? 1 : 0.3);
-        });
-      };
-      const reset = () => {
-        Object.values(tracePaths).forEach(p => { p.setAttribute('stroke-width', 2.4); p.setAttribute('opacity', 1); });
-      };
-      const legend = document.createElement('div');
-      legend.className = 'fragqc-legend';
-      step.fragQCGel.samples.forEach(s => {
-        const row = document.createElement('button');
-        row.type = 'button';
-        row.className = 'fragqc-legend-row';
-        row.innerHTML = `<span class="pool-swatch" style="background:${s.color}"></span><span class="mono">${joinLabel(s.label)}</span>`;
-        row.addEventListener('pointerenter', () => highlight(s.id));
-        row.addEventListener('focus', () => highlight(s.id));
-        row.addEventListener('pointerleave', reset);
-        row.addEventListener('blur', reset);
-        legend.appendChild(row);
-        const hit = section._gelHitRects && section._gelHitRects[s.id];
-        if (hit) {
-          hit.addEventListener('pointerenter', () => highlight(s.id));
-          hit.addEventListener('focus', () => highlight(s.id));
-          hit.addEventListener('pointerleave', reset);
-          hit.addEventListener('blur', reset);
-        }
-      });
-      widgets.appendChild(legend);
-    }
 
     // --- widgets ---
     if (step.qc) {
@@ -763,6 +784,9 @@
 
     if (step.breakIt) {
       buildBreakIt(section.querySelector('.breakit-block'), step.breakIt);
+    }
+    if (step.fragQC) {
+      buildFragQC(section.querySelector('.fragqc-block'), step.fragQC);
     }
 
     // --- reveal on scroll ---
