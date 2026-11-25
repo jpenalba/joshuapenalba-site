@@ -578,6 +578,57 @@
     DNA.el('path', { d, fill: 'none', stroke: 'var(--reg-p7)', 'stroke-width': 2.4 }, svg);
   }
 
+  // Adapter dimer: two Y-adapters ligated straight to each other, with the
+  // "insert" collapsed to almost nothing -- the short, no-insert product
+  // that out-competes real library molecules during PCR.
+  function drawBreakItAdapterDimer(svg) {
+    const cx = BREAKIT_W / 2, cy = BREAKIT_H / 2;
+    const fh = 11, fgap = 7, stemH = fh * 2 + fgap, stemW = 18, armLength = 46, spread = 25;
+    const w = 26;
+    const leftX = cx - w / 2, rightX = cx + w / 2;
+    DNA.fragmentOverhang(svg, { x: leftX, y: cy, width: w, height: fh, gap: fgap, overhangs: {} });
+    DNA.yAdapterStem(svg, {
+      x: leftX, y: cy, side: 'left', stemW, stemH, armLength, spread, strokeWidth: fh,
+      stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
+    });
+    DNA.yAdapterStem(svg, {
+      x: rightX, y: cy, side: 'right', stemW, stemH, armLength, spread, strokeWidth: fh,
+      stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
+    });
+    DNA.el('text', {
+      x: cx, y: cy - stemH / 2 - 18, 'text-anchor': 'middle',
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+    }, svg).textContent = '~120 bp, no insert';
+  }
+
+  // Chimeric ligation: two insert fragments joined directly to each other
+  // (no adapter at the junction) before adapters cap the two true outer
+  // ends -- a fusion the trace can't distinguish from a real long insert.
+  function drawBreakItChimera(svg) {
+    const cx = BREAKIT_W / 2, cy = BREAKIT_H / 2;
+    const fh = 11, fgap = 7, stemH = fh * 2 + fgap, stemW = 18, armLength = 46, spread = 25;
+    const segW = 120, totalW = segW * 2;
+    const leftX = cx - totalW / 2, rightX = cx + totalW / 2;
+    DNA.fragmentOverhang(svg, { x: leftX, y: cy, width: totalW, height: fh, gap: fgap, overhangs: {} });
+    DNA.yAdapterStem(svg, {
+      x: leftX, y: cy, side: 'left', stemW, stemH, armLength, spread, strokeWidth: fh,
+      stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
+    });
+    DNA.yAdapterStem(svg, {
+      x: rightX, y: cy, side: 'right', stemW, stemH, armLength, spread, strokeWidth: fh,
+      stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
+    });
+    const midX = leftX + segW;
+    DNA.el('line', {
+      x1: midX, y1: cy - stemH / 2 - 6, x2: midX, y2: cy + stemH / 2 + 6,
+      stroke: 'var(--reg-p7)', 'stroke-width': 2.5, 'stroke-dasharray': '3 3'
+    }, svg);
+    DNA.el('text', {
+      x: midX, y: cy - stemH / 2 - 14, 'text-anchor': 'middle',
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--reg-p7)'
+    }, svg).textContent = 'fusion junction';
+  }
+
   function buildBreakIt(mount, data) {
     mount.innerHTML = `
       <div class="breakit-head">
@@ -629,6 +680,14 @@
         chartTitle.textContent = 'Coverage vs. GC content';
         drawBreakItGCBias(stageSvg);
         drawGCCoverageChart(chartSvg);
+      } else if (f.visual === 'dimer') {
+        chartTitle.textContent = 'DNA fragment distribution';
+        drawBreakItAdapterDimer(stageSvg);
+        buildTrace(chartSvg, [f.trace]);
+      } else if (f.visual === 'chimera') {
+        chartTitle.textContent = 'DNA fragment distribution';
+        drawBreakItChimera(stageSvg);
+        buildTrace(chartSvg, [f.trace]);
       } else {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItSizeFailure(stageSvg, f.scale);
