@@ -105,23 +105,27 @@
       const wellY = GEL_Y + 16;
       DNA.el('rect', { x: lx, y: wellY, width: laneW, height: 9, rx: 2, fill: 'var(--gel-well)' }, svg);
 
+      // Bands are drawn a little wider than their well and with soft, rounded
+      // ends -- real bands diffuse laterally past the lane they were loaded
+      // in, rather than staying inside a crisp rectangle.
+      const bx = lx - 5, bw = laneW + 10;
       const bandTop = wellY + 20;
       if (lane.type === 'ladder') {
         const rungs = 7;
         for (let r = 0; r < rungs; r++) {
           DNA.el('rect', {
-            x: lx, y: bandTop + r * ((GEL_H - 55) / rungs), width: laneW, height: 5, rx: 2,
+            x: lx - 3, y: bandTop + r * ((GEL_H - 55) / rungs), width: laneW + 6, height: 5, rx: 2.5,
             fill: 'var(--gel-band)', opacity: 0.8
           }, svg);
         }
       } else if (lane.type === 'intact') {
-        DNA.el('rect', { x: lx, y: bandTop, width: laneW, height: 10, rx: 3, fill: 'var(--gel-band)' }, svg);
-        DNA.el('rect', { x: lx, y: bandTop + 8, width: laneW, height: 26, fill: 'url(#gelFadeTop)' }, svg);
+        DNA.el('rect', { x: bx, y: bandTop, width: bw, height: 10, rx: 5, fill: 'var(--gel-band)' }, svg);
+        DNA.el('rect', { x: bx, y: bandTop + 8, width: bw, height: 26, fill: 'url(#gelFadeTop)' }, svg);
       } else if (lane.type === 'moderate') {
-        DNA.el('rect', { x: lx, y: bandTop, width: laneW, height: 9, rx: 3, fill: 'var(--gel-band)', opacity: 0.6 }, svg);
-        DNA.el('rect', { x: lx, y: bandTop + 6, width: laneW, height: GEL_H - 80, fill: 'url(#gelFadeTop)' }, svg);
+        DNA.el('rect', { x: bx, y: bandTop, width: bw, height: 9, rx: 4.5, fill: 'var(--gel-band)', opacity: 0.6 }, svg);
+        DNA.el('rect', { x: bx, y: bandTop + 6, width: bw, height: GEL_H - 80, fill: 'url(#gelFadeTop)' }, svg);
       } else if (lane.type === 'degraded') {
-        DNA.el('rect', { x: lx, y: bandTop, width: laneW, height: GEL_H - 55, fill: 'url(#gelFadeLow)' }, svg);
+        DNA.el('rect', { x: bx, y: bandTop, width: bw, height: GEL_H - 55, fill: 'url(#gelFadeLow)' }, svg);
       }
 
       lane.label.forEach((line, li) => {
@@ -406,11 +410,16 @@
       const lx = cx - laneW / 2;
       DNA.el('rect', { x: lx, y: GEL_Y + 16, width: laneW, height: 9, rx: 2, fill: 'var(--gel-well)' }, svg);
 
+      // Bands are drawn a little wider than their well, with soft rounded
+      // ends -- real bands diffuse laterally past the lane they were loaded
+      // in, rather than staying inside a crisp rectangle.
+      const bx = lx - 5, bw = laneW + 10;
+
       if (laneId === 'ladder') {
         data.ladderBands.forEach(bp => {
           const y = bpToGelY(bp, yTop, yBottom);
           const bright = data.ladderBright.includes(bp);
-          DNA.el('rect', { x: lx, y: y - 2.5, width: laneW, height: 5, rx: 2, fill: 'var(--gel-band)', opacity: bright ? 0.95 : 0.5 }, svg);
+          DNA.el('rect', { x: lx - 3, y: y - 2.5, width: laneW + 6, height: 5, rx: 2.5, fill: 'var(--gel-band)', opacity: bright ? 0.95 : 0.5 }, svg);
         });
         DNA.el('text', { x: cx, y: GEL_Y + GEL_H + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = 'Ladder';
         return;
@@ -424,11 +433,11 @@
         if (v < 0.03) continue;
         const y = bpToGelY(bp, yTop, yBottom);
         const h = (yBottom - yTop) / steps + 1.4;
-        DNA.el('rect', { x: lx, y: y - h / 2, width: laneW, height: h, fill: s.color, opacity: Math.min(0.92, v) }, svg);
+        DNA.el('rect', { x: bx, y: y - h / 2, width: bw, height: h, rx: Math.min(h / 2, 2.5), fill: s.color, opacity: Math.min(0.92, v) }, svg);
       }
 
       const hit = DNA.el('rect', {
-        x: lx - 4, y: GEL_Y + 10, width: laneW + 8, height: GEL_H - 6, fill: 'transparent',
+        x: bx - 2, y: GEL_Y + 10, width: bw + 4, height: GEL_H - 6, fill: 'transparent',
         tabindex: 0, role: 'button', 'aria-label': `${joinLabel(s.label)} sample`, class: 'dna-region-hit'
       }, svg);
       hitRects[s.id] = hit;
@@ -508,7 +517,7 @@
           ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
         </div>
         <div class="data-panel">
-          ${(step.trace || step.fragQCGel) ? `<svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
+          ${(step.trace || step.fragQCGel) ? `<p class="data-panel-title mono">DNA fragment distribution</p><svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
           <div class="step-widgets"></div>
         </div>
       </div>
