@@ -100,6 +100,7 @@
   @media (max-width: 760px){ .step-visual{ grid-template-columns: 1fr; } }
 
   .stage-card{
+    position: relative;
     background: var(--bg-raised); border: 1px solid var(--line); border-radius: 16px;
     padding: 20px; overflow: hidden; display:flex; flex-direction:column; justify-content:center;
   }
@@ -130,12 +131,15 @@
   .fragqc-legend-row:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
   .size-marker-widget{ font-size: 0.92rem; color: var(--ink-soft); align-self:center; }
   .pcr-widget{ font-size: 0.88rem; color: var(--ink-soft); align-self:center; }
-  .pcr-replay-btn{
-    margin-top: 10px; align-self: flex-start; padding: 6px 14px; border-radius: 999px;
-    border: 1px solid var(--line-strong); background: var(--bg); color: var(--ink);
-    font-size: 0.82rem; cursor: pointer;
+  .pcr-play-btn{
+    position: absolute; left: 16px; bottom: 16px; z-index: 2;
+    width: 44px; height: 44px; border-radius: 50%; padding: 0;
+    border: none; background: var(--accent); color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
   }
-  .pcr-replay-btn:hover, .pcr-replay-btn:focus-visible{ background: var(--accent); color: #fff; border-color: var(--accent); }
+  .pcr-play-btn:hover, .pcr-play-btn:focus-visible{ filter: brightness(1.12); outline: none; }
+  .pcr-play-btn svg{ width: 18px; height: 18px; display: block; }
 
   .method-accordion{ display:flex; flex-direction:column; gap: 4px; margin-top: 4px; }
   .method-item{ border-top: 1px solid var(--line); }

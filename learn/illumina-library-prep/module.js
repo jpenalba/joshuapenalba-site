@@ -29,6 +29,9 @@
 
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  const PCR_ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const PCR_ICON_REPLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
+
   // ---------- shared stage geometry (generous, since the molecule is the focal point) ----------
   const STAGE_W = 700, STAGE_H = 230, MID_Y = 115;
   const FOCAL_W = 320, FOCAL_H = 26, FOCAL_X = (STAGE_W - FOCAL_W) / 2;
@@ -361,33 +364,54 @@
   // "slowly fill the box," without animating 256 molecules individually.
   const PCR_COLS = 16, PCR_ROWS = 16, PCR_CELL_W = 40, PCR_CELL_H = 22;
   const PCR_VIEW_W = 660, PCR_VIEW_H = 178, PCR_VIEW_X = (STAGE_W - PCR_VIEW_W) / 2, PCR_VIEW_Y = 44;
+  const PCR_PAD_X = 10, PCR_PAD_Y = 8;
 
   function pcrSlotPos(i) {
     const col = i % PCR_COLS, row = Math.floor(i / PCR_COLS);
     return { x: col * PCR_CELL_W + PCR_CELL_W / 2, y: row * PCR_CELL_H + PCR_CELL_H / 2 };
   }
 
-  function pcrCameraFor(activeCount) {
+  // Frames a bounding box (plus a fixed padding, so molecule ends are never
+  // flush with the stage edge) centered in the view, capped at 6x so a
+  // single molecule doesn't blow up absurdly large.
+  function pcrCameraFromBBox(centerX, centerY, bboxW, bboxH) {
+    const w = bboxW + PCR_PAD_X * 2, h = bboxH + PCR_PAD_Y * 2;
+    const s = Math.min(6, PCR_VIEW_W / w, PCR_VIEW_H / h);
+    return {
+      s,
+      tx: PCR_VIEW_X + PCR_VIEW_W / 2 - s * centerX,
+      ty: PCR_VIEW_Y + PCR_VIEW_H / 2 - s * centerY
+    };
+  }
+
+  function pcrCameraForGrid(activeCount) {
     const rows = Math.max(1, Math.ceil(activeCount / PCR_COLS));
     const cols = rows === 1 ? activeCount : PCR_COLS;
     const bboxW = cols * PCR_CELL_W, bboxH = rows * PCR_CELL_H;
-    const s = Math.min(6, PCR_VIEW_W / bboxW, PCR_VIEW_H / bboxH);
-    return {
-      s,
-      tx: PCR_VIEW_X + PCR_VIEW_W / 2 - s * (bboxW / 2),
-      ty: PCR_VIEW_Y + PCR_VIEW_H / 2 - s * (bboxH / 2)
-    };
+    return pcrCameraFromBBox(bboxW / 2, bboxH / 2, bboxW, bboxH);
   }
 
   function pcrSetCamera(cameraGroup, cam) {
     cameraGroup.setAttribute('transform', `translate(${cam.tx},${cam.ty}) scale(${cam.s})`);
   }
 
-  function pcrBluntMolecule(parent, x, y, w) {
+  // A resolved, fully double-stranded molecule: a grey core (the insert +
+  // primer-binding sites) capped with small coloured segments at each end
+  // (P5/P7 on the strand that reads as "top", i5/i7 on the strand that
+  // reads as "bottom") so even tiny, heavily-amplified copies still read
+  // as "this came from an adapter-ligated fragment," not a plain grey bar.
+  function pcrMoleculeWithCaps(parent, x, y, w, capW) {
     const g = DNA.group(parent, { class: 'pcr-molecule' });
     const fh = 3, fgap = 2;
-    DNA.el('rect', { x: x - w / 2, y: y - fgap / 2 - fh, width: w, height: fh, rx: 1, fill: 'var(--mol-backbone)' }, g);
-    DNA.el('rect', { x: x - w / 2, y: y + fgap / 2, width: w, height: fh, rx: 1, fill: 'var(--mol-backbone)' }, g);
+    const rows = [
+      { y: y - fgap / 2 - fh, left: 'var(--reg-p5)', right: 'var(--reg-p7)' },
+      { y: y + fgap / 2, left: 'var(--reg-i5)', right: 'var(--reg-i7)' }
+    ];
+    rows.forEach(r => {
+      DNA.el('rect', { x: x - w / 2, y: r.y, width: capW, height: fh, fill: r.left }, g);
+      DNA.el('rect', { x: x - w / 2 + capW, y: r.y, width: w - capW * 2, height: fh, rx: 1, fill: 'var(--mol-backbone)' }, g);
+      DNA.el('rect', { x: x + w / 2 - capW, y: r.y, width: capW, height: fh, fill: r.right }, g);
+    });
     return g;
   }
 
@@ -400,36 +424,58 @@
     counter.textContent = `Cycle 0 of ${cycles}`;
 
     const camera = DNA.group(svg, { class: 'pcr-camera' });
-    const initCam = pcrCameraFor(1);
-    pcrSetCamera(camera, initCam);
-    const cam = { s: initCam.s, tx: initCam.tx, ty: initCam.ty };
 
-    const fh = 3, fgap = 2, armLength = 9, spread = 6, coreW = 30, bluntW = 30;
+    const fh = 3, fgap = 2, armLength = 13, spread = 9, coreW = 30, capW = 6, bluntW = 30;
     const p0 = pcrSlotPos(0), p1 = pcrSlotPos(1);
+    const topY = p0.y - fgap / 2 - fh, botY = p0.y + fgap / 2;
+
+    // The seed camera frames the whole molecule -- core plus both diagonal
+    // arms -- so the colourful adapter ends are the focus from the very
+    // first frame, not just the grey insert in the middle.
+    const seedCam = pcrCameraFromBBox(p0.x, p0.y, coreW + armLength * 2, 2 * (fgap / 2 + fh / 2 + spread));
+    pcrSetCamera(camera, seedCam);
+    const cam = { s: seedCam.s, tx: seedCam.tx, ty: seedCam.ty };
 
     // Seed molecule: the Y-adapter-ligated fragment from Step 5, drawn as two
     // independent strand groups so they can be pulled apart on denaturing.
     const topStrand = DNA.group(camera, { class: 'pcr-top-strand' });
     const botStrand = DNA.group(camera, { class: 'pcr-bot-strand' });
-    DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y - fgap / 2 - fh, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, topStrand);
-    DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y + fgap / 2, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, botStrand);
-    const topLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: p0.y - fgap / 2 - fh / 2, x2: p0.x - coreW / 2 - armLength, y2: p0.y - fgap / 2 - fh / 2 - spread, stroke: 'var(--reg-p5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
-    const topRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: p0.y - fgap / 2 - fh / 2, x2: p0.x + coreW / 2 + armLength, y2: p0.y - fgap / 2 - fh / 2 - spread, stroke: 'var(--reg-p7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
-    const botLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: p0.y + fgap / 2 + fh / 2, x2: p0.x - coreW / 2 - armLength, y2: p0.y + fgap / 2 + fh / 2 + spread, stroke: 'var(--reg-i5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
-    const botRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: p0.y + fgap / 2 + fh / 2, x2: p0.x + coreW / 2 + armLength, y2: p0.y + fgap / 2 + fh / 2 + spread, stroke: 'var(--reg-i7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
+    DNA.el('rect', { x: p0.x - coreW / 2, y: topY, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, topStrand);
+    DNA.el('rect', { x: p0.x - coreW / 2, y: botY, width: coreW, height: fh, fill: 'var(--mol-backbone)' }, botStrand);
+    const topLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: topY + fh / 2, x2: p0.x - coreW / 2 - armLength, y2: topY + fh / 2 - spread, stroke: 'var(--reg-p5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
+    const topRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: topY + fh / 2, x2: p0.x + coreW / 2 + armLength, y2: topY + fh / 2 - spread, stroke: 'var(--reg-p7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, topStrand);
+    const botLeftArm = DNA.el('line', { x1: p0.x - coreW / 2, y1: botY + fh / 2, x2: p0.x - coreW / 2 - armLength, y2: botY + fh / 2 + spread, stroke: 'var(--reg-i5)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
+    const botRightArm = DNA.el('line', { x1: p0.x + coreW / 2, y1: botY + fh / 2, x2: p0.x + coreW / 2 + armLength, y2: botY + fh / 2 + spread, stroke: 'var(--reg-i7)', 'stroke-width': fh, 'stroke-linecap': 'round' }, botStrand);
+
+    // Resolved end-caps on the original strands, hidden until extension
+    // completes -- they cross-fade in exactly where their diagonal arm
+    // fades out, so the Y visually "resolves" into a blunt coloured end.
+    const topLeftCap = DNA.el('rect', { x: p0.x - coreW / 2, y: topY, width: capW, height: fh, fill: 'var(--reg-p5)', opacity: 0 }, topStrand);
+    const topRightCap = DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: topY, width: capW, height: fh, fill: 'var(--reg-p7)', opacity: 0 }, topStrand);
+    const botLeftCap = DNA.el('rect', { x: p0.x - coreW / 2, y: botY, width: capW, height: fh, fill: 'var(--reg-i5)', opacity: 0 }, botStrand);
+    const botRightCap = DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: botY, width: capW, height: fh, fill: 'var(--reg-i7)', opacity: 0 }, botStrand);
 
     // Primers (hidden until cycle 1's anneal step): one at the left end of
     // the top strand, one at the right end of the bottom strand.
-    const primerTop = DNA.el('rect', { x: p0.x - coreW / 2 - 4, y: p0.y - fgap / 2 - fh, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, topStrand);
-    const primerBot = DNA.el('rect', { x: p0.x + coreW / 2, y: p0.y + fgap / 2, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, botStrand);
+    const primerTop = DNA.el('rect', { x: p0.x - coreW / 2 - 5, y: topY, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, topStrand);
+    const primerBot = DNA.el('rect', { x: p0.x + coreW / 2 + 1, y: botY, width: 4, height: fh, fill: 'var(--accent)', opacity: 0 }, botStrand);
 
-    // New complementary strands, grown outward from each primer during
-    // cycle 1's extend step -- scaleX anchored at the primer end so the bar
-    // reads as "growing" rather than resizing in place.
-    const newBarForTop = DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y + fgap / 2, width: coreW, height: fh, fill: 'var(--accent)' }, topStrand);
-    const newBarForBot = DNA.el('rect', { x: p0.x - coreW / 2, y: p0.y - fgap / 2 - fh, width: coreW, height: fh, fill: 'var(--accent)' }, botStrand);
-    gsap.set(newBarForTop, { scaleX: 0, transformOrigin: 'left center' });
-    gsap.set(newBarForBot, { scaleX: 0, transformOrigin: 'right center' });
+    // New complementary strand for the top-strand molecule, grown outward
+    // from its primer during cycle 1's extend step -- scaleX anchored at
+    // the primer end so the bar reads as "growing," already carrying the
+    // i5/i7 end-caps its finished form will keep (the colour is the
+    // opposite pairing from the template strand it's completing).
+    const newStrandTop = DNA.group(topStrand, { class: 'pcr-new-strand' });
+    DNA.el('rect', { x: p0.x - coreW / 2, y: botY, width: capW, height: fh, fill: 'var(--reg-i5)' }, newStrandTop);
+    DNA.el('rect', { x: p0.x - coreW / 2 + capW, y: botY, width: coreW - capW * 2, height: fh, fill: 'var(--mol-backbone)' }, newStrandTop);
+    DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: botY, width: capW, height: fh, fill: 'var(--reg-i7)' }, newStrandTop);
+    gsap.set(newStrandTop, { scaleX: 0, transformOrigin: 'left center' });
+
+    const newStrandBot = DNA.group(botStrand, { class: 'pcr-new-strand' });
+    DNA.el('rect', { x: p0.x - coreW / 2, y: topY, width: capW, height: fh, fill: 'var(--reg-p5)' }, newStrandBot);
+    DNA.el('rect', { x: p0.x - coreW / 2 + capW, y: topY, width: coreW - capW * 2, height: fh, fill: 'var(--mol-backbone)' }, newStrandBot);
+    DNA.el('rect', { x: p0.x + coreW / 2 - capW, y: topY, width: capW, height: fh, fill: 'var(--reg-p7)' }, newStrandBot);
+    gsap.set(newStrandBot, { scaleX: 0, transformOrigin: 'right center' });
 
     // Pre-built molecules for every slot beyond the first two -- hidden
     // until the cycle they're born in pops them into view. Pre-building
@@ -439,30 +485,37 @@
     const laterMolecules = [];
     for (let i = 2; i < PCR_COLS * PCR_ROWS; i++) {
       const p = pcrSlotPos(i);
-      const g = pcrBluntMolecule(camera, p.x, p.y, bluntW);
+      const g = pcrMoleculeWithCaps(camera, p.x, p.y, bluntW, capW);
       gsap.set(g, { opacity: 0, scale: 0.3, transformOrigin: '50% 50%' });
       laterMolecules.push(g);
     }
 
     const tl = gsap.timeline({ paused: true });
     function camTo(activeCount, duration) {
-      const target = pcrCameraFor(activeCount);
+      const target = pcrCameraForGrid(activeCount);
       tl.to(cam, { s: target.s, tx: target.tx, ty: target.ty, duration, onUpdate: () => pcrSetCamera(camera, cam) }, '<');
     }
 
+    // Reset everything a plain JS object (the camera) or plain text
+    // (the counter) holds -- these aren't DOM style properties, so
+    // restarting the timeline doesn't revert them on its own the way it
+    // does for opacity/scale/etc; without this, Replay would start the
+    // molecule count and counter from wherever cycle 8 left them.
+    tl.set(cam, { s: seedCam.s, tx: seedCam.tx, ty: seedCam.ty, onComplete: () => pcrSetCamera(camera, cam) }, 0)
+      .call(() => { counter.textContent = `Cycle 0 of ${cycles}`; }, null, 0);
+
     // --- Cycle 1: denature -> anneal (one primer per strand) -> extend -> settle ---
-    tl.call(() => { counter.textContent = `Cycle 0 of ${cycles}`; }, null, 0)
-      .to(topStrand, { y: -6, duration: 0.7, ease: 'power1.inOut' })
-      .to(botStrand, { y: 6, duration: 0.7, ease: 'power1.inOut' }, '<')
-      .to([primerTop, primerBot], { opacity: 1, duration: 0.35 })
-      .to(newBarForTop, { scaleX: 1, duration: 0.9, ease: 'none' }, '>')
-      .to(newBarForBot, { scaleX: 1, duration: 0.9, ease: 'none' }, '<')
-      .to([topLeftArm, topRightArm, botLeftArm, botRightArm, primerTop, primerBot], { opacity: 0, duration: 0.3 }, '<0.5')
-      .to([newBarForTop, newBarForBot], { fill: 'var(--mol-backbone)', duration: 0.3 }, '<')
+    tl.to(topStrand, { y: -9, duration: 1.1, ease: 'power1.inOut' }, 0)
+      .to(botStrand, { y: 9, duration: 1.1, ease: 'power1.inOut' }, '<')
+      .to([primerTop, primerBot], { opacity: 1, duration: 0.55 })
+      .to(newStrandTop, { scaleX: 1, duration: 1.4, ease: 'none' }, '>')
+      .to(newStrandBot, { scaleX: 1, duration: 1.4, ease: 'none' }, '<')
+      .to([topLeftCap, topRightCap, botLeftCap, botRightCap], { opacity: 1, duration: 0.5 }, '<0.7')
+      .to([topLeftArm, topRightArm, botLeftArm, botRightArm, primerTop, primerBot], { opacity: 0, duration: 0.5 }, '<')
       .call(() => { counter.textContent = `Cycle 1 of ${cycles}`; })
-      .to(topStrand, { x: 0, y: 0, duration: 0.6, ease: 'power1.inOut' }, '>')
-      .to(botStrand, { x: p1.x - p0.x, y: 0, duration: 0.6, ease: 'power1.inOut' }, '<');
-    camTo(2, 0.6);
+      .to(topStrand, { x: 0, y: 0, duration: 0.9, ease: 'power1.inOut' }, '>')
+      .to(botStrand, { x: p1.x - p0.x, y: 0, duration: 0.9, ease: 'power1.inOut' }, '<');
+    camTo(2, 0.9);
 
     // --- Cycles 2-8: primers now anneal at both ends of every molecule;
     // shown as a generic doubling pulse rather than redrawing the full
@@ -471,16 +524,16 @@
       const before = Math.min(1 << (c - 1), PCR_COLS * PCR_ROWS);
       const after = Math.min(1 << c, PCR_COLS * PCR_ROWS);
       const visibleBefore = [topStrand, botStrand, ...laterMolecules.slice(0, before - 2)];
-      tl.to(visibleBefore, { scale: 1.12, duration: 0.18, yoyo: true, repeat: 1, transformOrigin: '50% 50%' }, '>0.1');
+      tl.to(visibleBefore, { scale: 1.12, duration: 0.27, yoyo: true, repeat: 1, transformOrigin: '50% 50%' }, '>0.15');
       const newOnes = laterMolecules.slice(before - 2, after - 2);
       if (newOnes.length) {
-        tl.to(newOnes, { opacity: 1, scale: 1, duration: 0.4, stagger: 0.008 }, '<0.15');
+        tl.to(newOnes, { opacity: 1, scale: 1, duration: 0.6, stagger: 0.012 }, '<0.22');
       }
-      camTo(after, 0.5);
-      tl.call(() => { counter.textContent = `Cycle ${c} of ${cycles}`; }, null, '<0.2');
+      camTo(after, 0.75);
+      tl.call(() => { counter.textContent = `Cycle ${c} of ${cycles}`; }, null, '<0.3');
     }
 
-    return { timeline: tl, counter };
+    return { timeline: tl };
   }
 
   function drawFinalAnatomy(svg, regionInfoEl, sizeMarkers) {
@@ -940,7 +993,7 @@
           <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
           ${step.id === 'step8' ? '<p class="region-info"></p>' : ''}
           ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
-          ${step.pcrCycles ? '<button type="button" class="pcr-replay-btn mono">Replay</button>' : ''}
+          ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
         </div>
         <div class="data-panel">
           ${step.trace ? `<p class="data-panel-title mono">DNA fragment distribution</p><svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
@@ -971,7 +1024,18 @@
     } else if (step.id === 'step7') {
       const pcr = buildPCRAnimation(stageSvg, step.pcrCycles);
       section._pcrTimeline = pcr.timeline;
-      section.querySelector('.pcr-replay-btn').addEventListener('click', () => pcr.timeline.restart());
+      const playBtn = section.querySelector('.pcr-play-btn');
+      let pcrStarted = false;
+      playBtn.addEventListener('click', () => {
+        if (!pcrStarted) {
+          pcrStarted = true;
+          playBtn.innerHTML = PCR_ICON_REPLAY;
+          playBtn.setAttribute('aria-label', 'Replay PCR animation');
+          pcr.timeline.play();
+        } else {
+          pcr.timeline.restart();
+        }
+      });
     } else if (step.id === 'step8') {
       drawFinalAnatomy(stageSvg, section.querySelector('.region-info'), step.sizeMarkers);
     } else if (step.id === 'step9') {
@@ -1019,11 +1083,8 @@
       gsap.set(section, { opacity: 0, y: 18 });
       section._onReveal = () => {
         gsap.to(section, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
-        if (step.id === 'step7') section._pcrTimeline.play();
       };
       pending.push(section);
-    } else if (step.id === 'step7') {
-      section._pcrTimeline.progress(1);
     }
   });
   checkReveal();
