@@ -72,6 +72,22 @@
       "qc": null
     },
     {
+      "id": "stepFragQC",
+      "title": "Fragmentation QC (optional)",
+      "caption": "When optimizing a fragmentation protocol for the first time or trying out samples from different species, it may be useful to check the fragmentation using a gel electrophoresis. Under-sheared samples can undergo further shearing but over-sheared samples cannot be recovered. When samples are over-sheared, the small fragments will likely be lost during bead clean-ups.",
+      "trace": null,
+      "fragQCGel": {
+        "ladderBands": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+        "ladderBright": [500, 1000],
+        "samples": [
+          { "id": "under", "label": ["Under-", "sheared"], "center": 450, "width": 150, "height": 0.45, "color": "var(--reg-i7)" },
+          { "id": "perfect", "label": ["Perfectly", "sheared"], "center": 260, "width": 65, "height": 0.95, "color": "var(--accent)" },
+          { "id": "over", "label": ["Over-", "sheared"], "center": 120, "width": 45, "height": 0.8, "color": "var(--reg-p7)" }
+        ]
+      },
+      "qc": null
+    },
+    {
       "id": "step3",
       "title": "End repair",
       "caption": "Shearing leaves messy ends; enzymes trim or fill them to blunt, phosphorylated ends.",

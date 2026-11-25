@@ -359,14 +359,99 @@
   }
   function bpToX(bp) { return TRACE_PAD + (bp / 1000) * (TRACE_W - TRACE_PAD * 2); }
 
-  function buildTrace(svg, peaks) {
+  function drawTraceAxis(svg) {
     DNA.el('line', { x1: TRACE_PAD, y1: TRACE_H - TRACE_PAD, x2: TRACE_W - TRACE_PAD, y2: TRACE_H - TRACE_PAD, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
     [0, 250, 500, 750, 1000].forEach(bp => {
       DNA.el('text', { x: bpToX(bp), y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 16, fill: 'var(--ink-soft)' }, svg).textContent = bp;
     });
     DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = 'fragment size (bp)';
+  }
+
+  function buildTrace(svg, peaks) {
+    drawTraceAxis(svg);
     const path = DNA.el('path', { d: tracePathD(peaks), fill: 'var(--accent)', opacity: 0.22, stroke: 'var(--accent)', 'stroke-width': 1.6 }, svg);
     return path;
+  }
+
+  // ---------- Fragmentation QC: a gel of under/perfectly/over-sheared samples
+  // next to their size-distribution curves, cross-linked by hover/focus. Both
+  // are derived from the same { center, width, height } per sample, so the
+  // gel band and its curve always agree.
+  // Joins a two-line gel label ("Under-"/"sheared") into one line without an
+  // odd space after a hyphen that was only there to break the gel caption.
+  function joinLabel(label) {
+    return label.reduce((acc, part) => acc + (acc.endsWith('-') ? '' : acc ? ' ' : '') + part, '');
+  }
+
+  const GELQC_BP_MIN = 60, GELQC_BP_MAX = 1050;
+  function bpToGelY(bp, yTop, yBottom) {
+    const t = (bp - GELQC_BP_MIN) / (GELQC_BP_MAX - GELQC_BP_MIN);
+    return yBottom - t * (yBottom - yTop);
+  }
+
+  function drawFragQCGel(svg, data) {
+    const GEL_X = 60, GEL_Y = 20, GEL_W = STAGE_W - 120, GEL_H = STAGE_H - 70;
+    DNA.el('rect', { x: GEL_X, y: GEL_Y, width: GEL_W, height: GEL_H, rx: 10, fill: 'var(--gel-bg)' }, svg);
+
+    const yTop = GEL_Y + 34, yBottom = GEL_Y + GEL_H - 14;
+    const lanes = ['ladder', ...data.samples.map(s => s.id)];
+    const margin = 32;
+    const usable = GEL_W - margin * 2;
+    const slot = usable / lanes.length;
+    const laneW = Math.min(70, slot - 24);
+    const hitRects = {};
+
+    lanes.forEach((laneId, i) => {
+      const cx = GEL_X + margin + slot * i + slot / 2;
+      const lx = cx - laneW / 2;
+      DNA.el('rect', { x: lx, y: GEL_Y + 16, width: laneW, height: 9, rx: 2, fill: 'var(--gel-well)' }, svg);
+
+      if (laneId === 'ladder') {
+        data.ladderBands.forEach(bp => {
+          const y = bpToGelY(bp, yTop, yBottom);
+          const bright = data.ladderBright.includes(bp);
+          DNA.el('rect', { x: lx, y: y - 2.5, width: laneW, height: 5, rx: 2, fill: 'var(--gel-band)', opacity: bright ? 0.95 : 0.5 }, svg);
+        });
+        DNA.el('text', { x: cx, y: GEL_Y + GEL_H + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = 'Ladder';
+        return;
+      }
+
+      const s = data.samples.find(x => x.id === laneId);
+      const steps = 44;
+      for (let k = 0; k <= steps; k++) {
+        const bp = GELQC_BP_MIN + (GELQC_BP_MAX - GELQC_BP_MIN) * (k / steps);
+        const v = s.height * Math.exp(-((bp - s.center) ** 2) / (2 * s.width * s.width));
+        if (v < 0.03) continue;
+        const y = bpToGelY(bp, yTop, yBottom);
+        const h = (yBottom - yTop) / steps + 1.4;
+        DNA.el('rect', { x: lx, y: y - h / 2, width: laneW, height: h, fill: s.color, opacity: Math.min(0.92, v) }, svg);
+      }
+
+      const hit = DNA.el('rect', {
+        x: lx - 4, y: GEL_Y + 10, width: laneW + 8, height: GEL_H - 6, fill: 'transparent',
+        tabindex: 0, role: 'button', 'aria-label': `${joinLabel(s.label)} sample`, class: 'dna-region-hit'
+      }, svg);
+      hitRects[s.id] = hit;
+
+      s.label.forEach((line, li) => {
+        DNA.el('text', {
+          x: cx, y: GEL_Y + GEL_H + 20 + li * 14, 'text-anchor': 'middle',
+          'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)'
+        }, svg).textContent = line;
+      });
+    });
+
+    return hitRects;
+  }
+
+  function drawFragQCTraces(svg, data) {
+    drawTraceAxis(svg);
+    const paths = {};
+    data.samples.forEach(s => {
+      const d = tracePathD([{ center: s.center, height: s.height, width: s.width }]);
+      paths[s.id] = DNA.el('path', { d, fill: 'none', stroke: s.color, 'stroke-width': 2.4 }, svg);
+    });
+    return paths;
   }
 
   // ---------- build each step section ----------
@@ -423,7 +508,7 @@
           ${step.fragMethods ? '<div class="stage-methods"></div>' : ''}
         </div>
         <div class="data-panel">
-          ${step.trace ? `<svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
+          ${(step.trace || step.fragQCGel) ? `<svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
           <div class="step-widgets"></div>
         </div>
       </div>
@@ -442,6 +527,8 @@
       drawGel(stageSvg, step.gel);
     } else if (step.id === 'step2') {
       drawSmear(stageSvg, 'ragged');
+    } else if (step.id === 'stepFragQC') {
+      section._gelHitRects = drawFragQCGel(stageSvg, step.fragQCGel);
     } else if (step.id === 'step3') {
       drawSmear(stageSvg, 'repaired');
     } else if (step.id === 'step4') {
@@ -458,7 +545,40 @@
     }
 
     // --- trace ---
-    if (traceSvg) buildTrace(traceSvg, step.trace.peaks);
+    if (traceSvg && step.trace) buildTrace(traceSvg, step.trace.peaks);
+    if (traceSvg && step.fragQCGel) {
+      const tracePaths = drawFragQCTraces(traceSvg, step.fragQCGel);
+      const highlight = (id) => {
+        Object.entries(tracePaths).forEach(([pid, p]) => {
+          p.setAttribute('stroke-width', pid === id ? 3.6 : 2.4);
+          p.setAttribute('opacity', pid === id ? 1 : 0.3);
+        });
+      };
+      const reset = () => {
+        Object.values(tracePaths).forEach(p => { p.setAttribute('stroke-width', 2.4); p.setAttribute('opacity', 1); });
+      };
+      const legend = document.createElement('div');
+      legend.className = 'fragqc-legend';
+      step.fragQCGel.samples.forEach(s => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'fragqc-legend-row';
+        row.innerHTML = `<span class="pool-swatch" style="background:${s.color}"></span><span class="mono">${joinLabel(s.label)}</span>`;
+        row.addEventListener('pointerenter', () => highlight(s.id));
+        row.addEventListener('focus', () => highlight(s.id));
+        row.addEventListener('pointerleave', reset);
+        row.addEventListener('blur', reset);
+        legend.appendChild(row);
+        const hit = section._gelHitRects && section._gelHitRects[s.id];
+        if (hit) {
+          hit.addEventListener('pointerenter', () => highlight(s.id));
+          hit.addEventListener('focus', () => highlight(s.id));
+          hit.addEventListener('pointerleave', reset);
+          hit.addEventListener('blur', reset);
+        }
+      });
+      widgets.appendChild(legend);
+    }
 
     // --- widgets ---
     if (step.qc) {
