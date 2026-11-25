@@ -129,21 +129,6 @@ const DNA = (() => {
     return g;
   }
 
-  // Open Y-shaped adapter (before PCR fills it in). side: 'left' | 'right'.
-  function yAdapterOpen(parent, { x, y, armLength = 26, spread = 13, side = 'left', colorOuter, colorInner } = {}) {
-    const dir = side === 'left' ? -1 : 1;
-    const g = group(parent, { class: `dna-yadapter dna-yadapter-${side}` });
-    el('path', {
-      d: `M ${x} ${y} L ${x + dir * armLength} ${y - spread}`,
-      stroke: colorOuter, 'stroke-width': 4, fill: 'none', 'stroke-linecap': 'round'
-    }, g);
-    el('path', {
-      d: `M ${x} ${y} L ${x + dir * armLength} ${y + spread}`,
-      stroke: colorInner, 'stroke-width': 4, fill: 'none', 'stroke-linecap': 'round'
-    }, g);
-    return g;
-  }
-
   // 3' A-tail's complementary marker on the adapter side -- an open square
   // (vs. the insert's filled A square) so the A/T pairing at the ligation
   // junction reads as two distinct pieces meeting, not one blob.
@@ -154,23 +139,20 @@ const DNA = (() => {
     return g;
   }
 
-  // A Y-adapter drawn with its double-stranded "stem" (the primer-binding
-  // site, Read 1/Read 2) as a distinct block from the single-stranded fork
-  // (flow-cell + index). Pre-ligation, it's already the same three parts it
-  // resolves into once PCR closes the Y, just coloured instead of labelled.
-  function yAdapterStem(parent, { x, y, side = 'left', stemW = 16, stemH = 32, stemColor, armLength = 42, spread = 22, strokeWidth = 12, colorOuter, colorInner } = {}) {
-    const dir = side === 'left' ? -1 : 1;
-    const g = group(parent, { class: `dna-yadapter-stem dna-yadapter-stem-${side}` });
-    const stemX = side === 'left' ? x - stemW : x;
-    el('rect', { x: stemX, y: y - stemH / 2, width: stemW, height: stemH, fill: stemColor }, g);
-    const forkX = side === 'left' ? stemX : stemX + stemW;
-    el('path', { d: `M ${forkX} ${y} L ${forkX + dir * armLength} ${y - spread}`, stroke: colorOuter, 'stroke-width': strokeWidth, fill: 'none', 'stroke-linecap': 'round' }, g);
-    el('path', { d: `M ${forkX} ${y} L ${forkX + dir * armLength} ${y + spread}`, stroke: colorInner, 'stroke-width': strokeWidth, fill: 'none', 'stroke-linecap': 'round' }, g);
+  // One Y-adapter end: two independent arms, each a direct continuation of
+  // its own strand (the strand's own y, not a shared vertex) that simply
+  // splays outward -- so the top and bottom strands each read as one
+  // unbroken ribbon from tip to tip, rather than two pieces meeting at a
+  // seam in the middle.
+  function yAdapterEnd(parent, { x, topY, botY, dir = 1, armLength = 42, spread = 22, strokeWidth = 12, colorTop, colorBottom } = {}) {
+    const g = group(parent, { class: 'dna-yadapter-end' });
+    el('path', { d: `M ${x} ${topY} L ${x + dir * armLength} ${topY - spread}`, stroke: colorTop, 'stroke-width': strokeWidth, fill: 'none', 'stroke-linecap': 'round' }, g);
+    el('path', { d: `M ${x} ${botY} L ${x + dir * armLength} ${botY + spread}`, stroke: colorBottom, 'stroke-width': strokeWidth, fill: 'none', 'stroke-linecap': 'round' }, g);
     return g;
   }
 
   return {
-    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, fragmentOverhang, phosphateDot, aTailDot, aTailSquare, tOverhangSquare, yAdapterOpen, yAdapterStem,
+    el, group, genomicStrand, fragmentBar, regionRow, raggedCap, fragmentOverhang, phosphateDot, aTailDot, aTailSquare, tOverhangSquare, yAdapterEnd,
     REGIONS: {
       p5:    { key: 'p5',    label: 'P5', color: 'var(--reg-p5)' },
       i5:    { key: 'i5',    label: 'i5', color: 'var(--reg-i5)' },

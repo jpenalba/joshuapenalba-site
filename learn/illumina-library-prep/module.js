@@ -299,32 +299,35 @@
 
   function drawAdapterLigation(svg) {
     LIGATION_BG.forEach(f => {
-      const fh = 5, fgap = 3, stemH = fh * 2 + fgap;
+      const fh = 5, fgap = 3;
+      const topY = f.y - fgap / 2 - fh / 2, botY = f.y + fgap / 2 + fh / 2;
       DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height: fh, gap: fgap, overhangs: {} });
-      DNA.yAdapterStem(svg, {
-        x: f.x, y: f.y, side: 'left', stemW: 7, stemH, armLength: 14, spread: 8, strokeWidth: fh,
-        stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
+      DNA.yAdapterEnd(svg, {
+        x: f.x, topY, botY, dir: -1, armLength: 14, spread: 8, strokeWidth: fh,
+        colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
       });
-      DNA.yAdapterStem(svg, {
-        x: f.x + f.w, y: f.y, side: 'right', stemW: 7, stemH, armLength: 14, spread: 8, strokeWidth: fh,
-        stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
+      DNA.yAdapterEnd(svg, {
+        x: f.x + f.w, topY, botY, dir: 1, armLength: 14, spread: 8, strokeWidth: fh,
+        colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
       });
     });
 
     // Focal fragment: two equal strand bars (as in End repair/A-tailing),
-    // each Y-adapter attached as a coloured stem (primer site) + fork
-    // (flow-cell binding site + index), with the A/T overhang pairing that
-    // gives the ligation its specificity called out at each end.
-    const fh = 12, fgap = 8, stemH = fh * 2 + fgap;
-    DNA.yAdapterStem(svg, {
-      x: FOCAL_X, y: MID_Y, side: 'left', stemW: 20, stemH, armLength: 50, spread: 26, strokeWidth: fh,
-      stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
-    });
-    DNA.yAdapterStem(svg, {
-      x: FOCAL_X + FOCAL_W, y: MID_Y, side: 'right', stemW: 20, stemH, armLength: 50, spread: 26, strokeWidth: fh,
-      stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
-    });
+    // each continuing directly into its own Y-adapter arm -- top strand
+    // becomes the P5/P7 arm, bottom strand becomes the i5/i7 arm -- with
+    // the A/T overhang pairing that gives the ligation its specificity
+    // called out at each junction.
+    const fh = 12, fgap = 8;
+    const topY = MID_Y - fgap / 2 - fh / 2, botY = MID_Y + fgap / 2 + fh / 2;
     DNA.fragmentOverhang(svg, { x: FOCAL_X, y: MID_Y, width: FOCAL_W, height: fh, gap: fgap, overhangs: {} });
+    DNA.yAdapterEnd(svg, {
+      x: FOCAL_X, topY, botY, dir: -1, armLength: 50, spread: 26, strokeWidth: fh,
+      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
+    });
+    DNA.yAdapterEnd(svg, {
+      x: FOCAL_X + FOCAL_W, topY, botY, dir: 1, armLength: 50, spread: 26, strokeWidth: fh,
+      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
+    });
 
     // A/T pairing stacked vertically right at each junction -- the A-tail
     // (insert) directly against the T-overhang (adapter) it binds to.
@@ -583,20 +586,21 @@
   // that out-competes real library molecules during PCR.
   function drawBreakItAdapterDimer(svg) {
     const cx = BREAKIT_W / 2, cy = BREAKIT_H / 2;
-    const fh = 11, fgap = 7, stemH = fh * 2 + fgap, stemW = 18, armLength = 46, spread = 25;
+    const fh = 11, fgap = 7, armLength = 46, spread = 25;
+    const topY = cy - fgap / 2 - fh / 2, botY = cy + fgap / 2 + fh / 2;
     const w = 26;
     const leftX = cx - w / 2, rightX = cx + w / 2;
     DNA.fragmentOverhang(svg, { x: leftX, y: cy, width: w, height: fh, gap: fgap, overhangs: {} });
-    DNA.yAdapterStem(svg, {
-      x: leftX, y: cy, side: 'left', stemW, stemH, armLength, spread, strokeWidth: fh,
-      stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
+    DNA.yAdapterEnd(svg, {
+      x: leftX, topY, botY, dir: -1, armLength, spread, strokeWidth: fh,
+      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
     });
-    DNA.yAdapterStem(svg, {
-      x: rightX, y: cy, side: 'right', stemW, stemH, armLength, spread, strokeWidth: fh,
-      stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
+    DNA.yAdapterEnd(svg, {
+      x: rightX, topY, botY, dir: 1, armLength, spread, strokeWidth: fh,
+      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
     });
     DNA.el('text', {
-      x: cx, y: cy - stemH / 2 - 18, 'text-anchor': 'middle',
+      x: cx, y: topY - spread - 10, 'text-anchor': 'middle',
       'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
     }, svg).textContent = '~120 bp, no insert';
   }
@@ -606,25 +610,26 @@
   // ends -- a fusion the trace can't distinguish from a real long insert.
   function drawBreakItChimera(svg) {
     const cx = BREAKIT_W / 2, cy = BREAKIT_H / 2;
-    const fh = 11, fgap = 7, stemH = fh * 2 + fgap, stemW = 18, armLength = 46, spread = 25;
+    const fh = 11, fgap = 7, armLength = 46, spread = 25;
+    const topY = cy - fgap / 2 - fh / 2, botY = cy + fgap / 2 + fh / 2;
     const segW = 120, totalW = segW * 2;
     const leftX = cx - totalW / 2, rightX = cx + totalW / 2;
     DNA.fragmentOverhang(svg, { x: leftX, y: cy, width: totalW, height: fh, gap: fgap, overhangs: {} });
-    DNA.yAdapterStem(svg, {
-      x: leftX, y: cy, side: 'left', stemW, stemH, armLength, spread, strokeWidth: fh,
-      stemColor: 'var(--reg-read1)', colorOuter: 'var(--reg-p5)', colorInner: 'var(--reg-i5)'
+    DNA.yAdapterEnd(svg, {
+      x: leftX, topY, botY, dir: -1, armLength, spread, strokeWidth: fh,
+      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
     });
-    DNA.yAdapterStem(svg, {
-      x: rightX, y: cy, side: 'right', stemW, stemH, armLength, spread, strokeWidth: fh,
-      stemColor: 'var(--reg-read2)', colorOuter: 'var(--reg-p7)', colorInner: 'var(--reg-i7)'
+    DNA.yAdapterEnd(svg, {
+      x: rightX, topY, botY, dir: 1, armLength, spread, strokeWidth: fh,
+      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
     });
     const midX = leftX + segW;
     DNA.el('line', {
-      x1: midX, y1: cy - stemH / 2 - 6, x2: midX, y2: cy + stemH / 2 + 6,
+      x1: midX, y1: topY - 6, x2: midX, y2: botY + 6,
       stroke: 'var(--reg-p7)', 'stroke-width': 2.5, 'stroke-dasharray': '3 3'
     }, svg);
     DNA.el('text', {
-      x: midX, y: cy - stemH / 2 - 14, 'text-anchor': 'middle',
+      x: midX, y: topY - 14, 'text-anchor': 'middle',
       'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--reg-p7)'
     }, svg).textContent = 'fusion junction';
   }
