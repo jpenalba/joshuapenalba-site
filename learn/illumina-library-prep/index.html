@@ -119,6 +119,14 @@
   .qc-row:last-child, .pool-row:last-child{ border-bottom:none; }
   .qc-key{ color: var(--ink-faint); }
   .pool-swatch{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+  .fragqc-legend{ display:flex; flex-direction:column; gap:2px; }
+  .fragqc-legend-row{
+    display:flex; align-items:center; gap:0; padding:7px 4px; margin:0; width:100%;
+    background:none; border:none; border-radius:6px; cursor:pointer; text-align:left;
+    font: inherit; font-size: 0.86rem; color: var(--ink);
+  }
+  .fragqc-legend-row:hover, .fragqc-legend-row:focus-visible{ background: var(--bg); color: var(--accent); }
+  .fragqc-legend-row:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
   .bead-label{ display:block; font-size: 0.78rem; color: var(--ink-soft); margin: 6px 0 2px; }
   .bead-widget input[type="range"]{ width: 100%; }
   .size-marker-widget{ font-size: 0.92rem; color: var(--ink-soft); align-self:center; }
