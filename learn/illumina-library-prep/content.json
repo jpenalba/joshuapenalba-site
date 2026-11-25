@@ -69,6 +69,37 @@
           "detail": "A transposase (commonly Tn5) loaded with adapter sequences simultaneously cuts the DNA and ligates an adapter at each cut site. Because fragmentation and adapter attachment happen together, it skips the separate end-repair and ligation steps entirely and needs very little input DNA — but the insertion sites aren't fully random, which can introduce some sequence bias, and it's more sensitive to getting the DNA-to-enzyme ratio right."
         }
       ],
+      "breakIt": {
+        "title": "Break it: common fragmentation failures",
+        "failures": [
+          {
+            "id": "under",
+            "label": "Under-sheared",
+            "mechanism": "Too little time, power or enzyme activity leaves fragments larger than the target size.",
+            "fingerprint": "The size-distribution trace shifts and broadens toward larger fragments. Bead clean-up then discards more of the library trying to pull the upper size cut-off back in, lowering yield.",
+            "mitigation": "Fixable — re-shear the sample for longer, or run another round of fragmentation.",
+            "scale": 1.8,
+            "trace": { "center": 430, "width": 140, "height": 0.6 }
+          },
+          {
+            "id": "over",
+            "label": "Over-sheared",
+            "mechanism": "Too much time, power or enzyme activity leaves fragments smaller than the target size.",
+            "fingerprint": "The size-distribution trace shifts toward very small fragments. Many are lost at the lower bead clean-up cut-off, and the surviving inserts — shorter than the read length — let reads sequence into the adapter.",
+            "mitigation": "Not fixable — the only option is to re-prep from fresh input DNA with gentler fragmentation conditions.",
+            "scale": 0.4,
+            "trace": { "center": 85, "width": 30, "height": 1.0 }
+          },
+          {
+            "id": "gcbias",
+            "label": "GC bias (tagmentation)",
+            "mechanism": "Tn5 transposase doesn't cut DNA uniformly — it prefers certain sequence motifs, so some regions fragment more readily than others.",
+            "fingerprint": "Coverage becomes uneven across the genome: GC-rich and AT-rich regions are systematically under- or over-represented, seen as a tilted coverage-vs-GC-content curve instead of a flat line.",
+            "mitigation": "Switch to sonication or enzymatic shearing where even coverage matters, or correct for it computationally during analysis.",
+            "gc": true
+          }
+        ]
+      },
       "qc": null
     },
     {
