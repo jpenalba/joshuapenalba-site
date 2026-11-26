@@ -201,6 +201,20 @@
       "caption": "PCR completes or enriches full-length molecules and raises the yield. The first cycle is special: each original strand only has a primer site at one end, so polymerase must copy all the way across to create a proper binding site at the other end. From the second cycle on, primers anneal at both ends and every molecule doubles. Each cycle adds bias.",
       "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
       "pcrCycles": 8,
+      "ampMethods": [
+        {
+          "id": "pcr",
+          "label": "Standard PCR amplification",
+          "summary": "A few cycles of PCR amplify the adapter-ligated library before sequencing, using primers matching the P5/P7 regions shown here.",
+          "detail": "The ligated library is amplified with primers matching the P5 and P7 regions of the adapters, producing many copies of each fragment and raising the overall yield enough to sequence from a small amount of starting material. It works from low-input or lower-quality DNA where there isn't enough material to sequence directly, but every extra cycle introduces some duplication and amplification bias (see 'Break it' below)."
+        },
+        {
+          "id": "pcrfree",
+          "label": "PCR-free library prep",
+          "summary": "Skips amplification entirely -- enough adapter-ligated library is carried straight into sequencing without ever being copied by a polymerase.",
+          "detail": "Rather than amplifying the ligated library, enough input DNA is used up front that the post-ligation material alone is sufficient to load onto the flow cell. Because no PCR ever happens, there are no PCR duplicates and no GC/AT amplification bias, giving the most even, representative coverage across the genome. It needs considerably more, higher-quality starting DNA than a PCR-amplified protocol can get away with, so it isn't an option for low-input, degraded or precious samples."
+        }
+      ],
       "breakIt": {
         "title": "Break it: common PCR failures",
         "failures": [

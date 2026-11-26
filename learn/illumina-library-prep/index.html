@@ -104,6 +104,10 @@
     background: var(--bg-raised); border: 1px solid var(--line); border-radius: 16px;
     padding: 20px; overflow: hidden; display:flex; flex-direction:column; justify-content:center;
   }
+  /* Positions the PCR play button in a corner of the SVG itself, not of the
+     whole card -- so it stays pinned to the stage even when a methods
+     accordion is appended below the SVG inside the same card. */
+  .stage-svg-wrap{ position: relative; }
   .step-stage{ width: 100%; height: auto; display:block; }
   .region-info{ min-height: 1.5em; font-size: 0.9rem; color: var(--ink-soft); margin: 12px 2px 0; text-align:center; }
   .stage-methods{ width:100%; margin-top: 16px; }

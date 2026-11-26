@@ -1373,9 +1373,11 @@
       <p class="step-caption">${step.caption}</p>
       <div class="step-visual">
         <div class="stage-card">
-          <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
-          ${step.extractionMethods || step.fragMethods || step.indexMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
-          ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
+          <div class="stage-svg-wrap">
+            <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
+            ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
+          </div>
+          ${step.extractionMethods || step.fragMethods || step.indexMethods || step.ampMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
         </div>
         <div class="data-panel">
           ${step.trace ? `<p class="data-panel-title mono">DNA fragment distribution</p><svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
@@ -1460,6 +1462,9 @@
     }
     if (step.indexMethods) {
       buildMethodAccordion(stageMethods, step.indexMethods, step.id);
+    }
+    if (step.ampMethods) {
+      buildMethodAccordion(stageMethods, step.ampMethods, step.id);
     }
     if (step.normalizeMethods) {
       buildMethodAccordion(stageMethods, step.normalizeMethods, step.id);
