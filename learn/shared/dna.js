@@ -66,7 +66,7 @@ const DNA = (() => {
       if (r.label) {
         el('text', {
           x: cx + r.width / 2, y: y + 4, 'text-anchor': 'middle',
-          'font-family': "'IBM Plex Mono', monospace", 'font-size': 9, fill: '#fff', 'font-weight': 600
+          'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: '#fff', 'font-weight': 600
         }, g).textContent = r.label;
       }
       cx += r.width;
@@ -107,7 +107,7 @@ const DNA = (() => {
   function phosphateDot(parent, { x, y, r = 4 } = {}) {
     const g = group(parent, { class: 'dna-phosphate' });
     el('circle', { cx: x, cy: y, r, fill: '#fff', stroke: 'var(--mol-backbone)', 'stroke-width': 1.3 }, g);
-    el('text', { x, y: y + 3, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 7, fill: 'var(--mol-backbone)' }, g).textContent = 'P';
+    el('text', { x, y: y + 3, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 9, fill: 'var(--mol-backbone)' }, g).textContent = 'P';
     return g;
   }
 
@@ -115,7 +115,7 @@ const DNA = (() => {
   function aTailDot(parent, { x, y, r = 5 } = {}) {
     const g = group(parent, { class: 'dna-atail' });
     el('circle', { cx: x, cy: y, r, fill: 'var(--mol-highlight)', stroke: 'var(--mol-backbone)', 'stroke-width': 1 }, g);
-    el('text', { x, y: y + 3.5, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 8, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'A';
+    el('text', { x, y: y + 3.5, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 10, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'A';
     return g;
   }
 
@@ -125,7 +125,7 @@ const DNA = (() => {
   function aTailSquare(parent, { x, y, size = 10 } = {}) {
     const g = group(parent, { class: 'dna-atail-square' });
     el('rect', { x: x - size / 2, y: y - size / 2, width: size, height: size, rx: 2, fill: 'var(--mol-highlight)', stroke: 'var(--mol-backbone)', 'stroke-width': 1 }, g);
-    el('text', { x, y: y + size * 0.32, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': size * 0.75, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'A';
+    el('text', { x, y: y + size * 0.32, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': size * 0.85, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'A';
     return g;
   }
 
@@ -135,7 +135,7 @@ const DNA = (() => {
   function tOverhangSquare(parent, { x, y, size = 10 } = {}) {
     const g = group(parent, { class: 'dna-toverhang-square' });
     el('rect', { x: x - size / 2, y: y - size / 2, width: size, height: size, rx: 2, fill: '#fff', stroke: 'var(--mol-backbone)', 'stroke-width': 1.3 }, g);
-    el('text', { x, y: y + size * 0.32, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': size * 0.75, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'T';
+    el('text', { x, y: y + size * 0.32, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': size * 0.85, 'font-weight': 700, fill: 'var(--mol-backbone)' }, g).textContent = 'T';
     return g;
   }
 

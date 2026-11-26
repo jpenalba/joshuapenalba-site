@@ -114,13 +114,16 @@
       const bx = lx - 5, bw = laneW + 10;
       const bandTop = wellY + 20;
       if (lane.type === 'ladder') {
-        const rungs = 7;
-        for (let r = 0; r < rungs; r++) {
-          DNA.el('rect', {
-            x: lx - 3, y: bandTop + r * ((GEL_H - 55) / rungs), width: laneW + 6, height: 5, rx: 2.5,
-            fill: 'var(--gel-band)', opacity: 0.8
-          }, svg);
-        }
+        // Same realistic 100bp ladder convention as Fragmentation QC: bands
+        // positioned by actual size, 500bp/1kb brighter than the rest.
+        const yTop = bandTop, yBottom = GEL_Y + GEL_H - 14;
+        const ladderBands = gel.ladderBands || [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+        const ladderBright = gel.ladderBright || [500, 1000];
+        ladderBands.forEach(bp => {
+          const y = bpToGelY(bp, yTop, yBottom);
+          const bright = ladderBright.includes(bp);
+          DNA.el('rect', { x: lx - 3, y: y - 2.5, width: laneW + 6, height: 5, rx: 2.5, fill: 'var(--gel-band)', opacity: bright ? 0.95 : 0.5 }, svg);
+        });
       } else if (lane.type === 'intact') {
         DNA.el('rect', { x: bx, y: bandTop, width: bw, height: 10, rx: 5, fill: 'var(--gel-band)' }, svg);
         DNA.el('rect', { x: bx, y: bandTop + 8, width: bw, height: 26, fill: 'url(#gelFadeTop)' }, svg);
@@ -134,7 +137,7 @@
       lane.label.forEach((line, li) => {
         DNA.el('text', {
           x: cx, y: GEL_Y + GEL_H + 20 + li * 14, 'text-anchor': 'middle',
-          'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)'
+          'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
         }, svg).textContent = line;
       });
     });
@@ -147,7 +150,7 @@
     lines.forEach((line, i) => {
       DNA.el('text', {
         x: 85, y: y0 + i * 13, 'text-anchor': 'middle',
-        'font-family': "'IBM Plex Mono', monospace", 'font-size': 10, fill: 'var(--ink-soft)'
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--ink-soft)'
       }, svg).textContent = line;
     });
   }
@@ -217,14 +220,14 @@
     DNA.el('rect', { x: 68, y: 53, width: 13, height: 13, rx: 2, fill: 'var(--reg-p7)' }, svg);
     DNA.el('rect', { x: 89, y: 53, width: 13, height: 13, rx: 2, fill: 'var(--reg-i7)' }, svg);
     DNA.el('ellipse', { cx: 85, cy: 38, rx: 24, ry: 14, fill: 'var(--reg-read1)', opacity: 0.55 }, svg);
-    DNA.el('text', { x: 85, y: 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 10, fill: 'var(--ink)' }, svg).textContent = 'Tn5';
+    DNA.el('text', { x: 85, y: 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--ink)' }, svg).textContent = 'Tn5';
     captionLines(svg, ['Cuts and tags DNA', 'in a single step'], 118);
   }
 
   function drawBeadSelect(svg) {
     DNA.el('path', { d: 'M55 20 L55 85 Q55 100 85 100 Q115 100 115 85 L115 20 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2 }, svg);
     DNA.el('rect', { x: 118, y: 52, width: 13, height: 30, rx: 3, fill: 'var(--line-strong)' }, svg);
-    DNA.el('text', { x: 124.5, y: 71, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 8, fill: '#fff' }, svg).textContent = 'M';
+    DNA.el('text', { x: 124.5, y: 71, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 10, fill: '#fff' }, svg).textContent = 'M';
     [[109, 58], [112, 64], [107, 70], [111, 76]].forEach(([x, y]) => {
       DNA.el('circle', { cx: x, cy: y, r: 2.6, fill: 'var(--ink-faint)' }, svg);
     });
@@ -250,7 +253,7 @@
     });
     DNA.el('rect', { x: 30, y: 70, width: 20, height: 6, rx: 2, fill: 'var(--reg-p7)' }, svg);
     DNA.el('circle', { cx: 85, cy: 62, r: 15, fill: 'var(--reg-i7)', opacity: 0.45 }, svg);
-    DNA.el('text', { x: 85, y: 66, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 9, fill: 'var(--ink)' }, svg).textContent = 'Nxn';
+    DNA.el('text', { x: 85, y: 66, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink)' }, svg).textContent = 'Nxn';
     DNA.el('path', { d: 'M54 62 L72 62 M68 58 L74 62 L68 66', stroke: 'var(--ink-soft)', 'stroke-width': 1.6, fill: 'none' }, svg);
     DNA.el('path', { d: 'M98 62 L116 62 M112 58 L118 62 L112 66', stroke: 'var(--ink-soft)', 'stroke-width': 1.6, fill: 'none' }, svg);
     [[120, 56], [120, 66], [120, 76]].forEach(([x, y]) => {
@@ -460,7 +463,7 @@
     svg.innerHTML = '';
     const counter = DNA.el('text', {
       x: STAGE_W / 2, y: 22, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace",
-      'font-size': 15, fill: 'var(--ink-soft)'
+      'font-size': 17, fill: 'var(--ink-soft)'
     }, svg);
     counter.textContent = `Cycle 0 of ${cycles}`;
 
@@ -610,7 +613,7 @@
 
   function bracket(svg, x1, x2, y, label) {
     DNA.el('path', { d: `M ${x1} ${y + 7} L ${x1} ${y} L ${x2} ${y} L ${x2} ${y + 7}`, stroke: 'var(--ink-faint)', 'stroke-width': 1.4, fill: 'none' }, svg);
-    DNA.el('text', { x: (x1 + x2) / 2, y: y - 7, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = label;
+    DNA.el('text', { x: (x1 + x2) / 2, y: y - 7, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = label;
   }
 
   // "Anatomy of the final library" -- a callback sub-section consolidated
@@ -649,7 +652,7 @@
       }
       DNA.el('text', {
         x: c.x, y: MID_Y + 78, 'text-anchor': 'middle',
-        'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)'
       }, svg).textContent = c.label;
     });
   }
@@ -681,18 +684,18 @@
 
   function drawPoolMerge(svg) {
     const clusterXs = [100, 300, 500];
-    const clusterY = 48, count = 6, cols = 3;
-    const molW = 32, capW = 6, cellW = 42, cellH = 18;
+    const clusterY = 30, count = 6, cols = 6;
+    const molW = 24, capW = 5, cellW = 30, cellH = 18;
     const labels = ['Library A', 'Library B', 'Library C'];
     const rows = Math.ceil(count / cols), gridW = cols * cellW, gridH = rows * cellH;
-    const tubeCx = 300, tubeTopY = 128, tubeW = 66;
+    const tubeCx = 300, tubeTopY = 89, tubeW = 119;
 
     // Tube drawn first so the arrows (and their arrowheads) land on top of
     // the lid rather than being painted over by it.
     const tube = drawTubeIcon(svg, tubeCx, tubeTopY, tubeW);
     DNA.el('text', {
-      x: tubeCx, y: tube.y + tube.height + 18, 'text-anchor': 'middle',
-      'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+      x: tubeCx, y: tube.y + tube.height + 14, 'text-anchor': 'middle',
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)'
     }, svg).textContent = 'Pooled library';
 
     clusterXs.forEach((cx, ci) => {
@@ -703,11 +706,11 @@
       }
       DNA.el('text', {
         x: cx, y: clusterY - gridH / 2 - 10, 'text-anchor': 'middle',
-        'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)'
       }, svg).textContent = labels[ci];
 
-      const targetX = tubeCx - 14 + ci * 14;
-      arrowTo(svg, cx, clusterY + gridH / 2 + 8, targetX, tubeTopY - 14, 'var(--ink-faint)');
+      const targetX = tubeCx - 18 + ci * 18;
+      arrowTo(svg, cx, clusterY + gridH / 2 + 6, targetX, tubeTopY - 10, 'var(--ink-faint)');
     });
   }
 
@@ -722,9 +725,9 @@
     [0, 250, 500, 750, 1000].forEach(bp => {
       const bx = x0 + (bp / 1000) * (x1 - x0);
       DNA.el('line', { x1: bx, y1: y0, x2: bx, y2: y0 + 5, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
-      DNA.el('text', { x: bx, y: y0 + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = bp;
+      DNA.el('text', { x: bx, y: y0 + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = bp;
     });
-    DNA.el('text', { x: (x0 + x1) / 2, y: y0 + 40, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = 'fragment size (bp)';
+    DNA.el('text', { x: (x0 + x1) / 2, y: y0 + 40, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = 'fragment size (bp)';
 
     const n = 120;
     let d = '';
@@ -738,8 +741,8 @@
 
     const boxW = 150, boxX = x1 - boxW, boxY = y1 + 6;
     DNA.el('rect', { x: boxX, y: boxY, width: boxW, height: 56, rx: 8, fill: 'var(--bg-raised)', stroke: 'var(--line)', 'stroke-width': 1 }, svg);
-    DNA.el('text', { x: boxX + 12, y: boxY + 23, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink)' }, svg).textContent = `Conc: ${data.conc}`;
-    DNA.el('text', { x: boxX + 12, y: boxY + 43, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink)' }, svg).textContent = `Molarity: ${data.molarity}`;
+    DNA.el('text', { x: boxX + 12, y: boxY + 23, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink)' }, svg).textContent = `Conc: ${data.conc}`;
+    DNA.el('text', { x: boxX + 12, y: boxY + 43, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink)' }, svg).textContent = `Molarity: ${data.molarity}`;
   }
 
   function buildFinalQC(mount, data) {
@@ -775,9 +778,9 @@
   function drawTraceAxis(svg) {
     DNA.el('line', { x1: TRACE_PAD, y1: TRACE_H - TRACE_PAD, x2: TRACE_W - TRACE_PAD, y2: TRACE_H - TRACE_PAD, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
     [0, 250, 500, 750, 1000].forEach(bp => {
-      DNA.el('text', { x: bpToX(bp), y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 16, fill: 'var(--ink-soft)' }, svg).textContent = bp;
+      DNA.el('text', { x: bpToX(bp), y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 18, fill: 'var(--ink-soft)' }, svg).textContent = bp;
     });
-    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = 'fragment size (bp)';
+    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 17, fill: 'var(--ink-soft)' }, svg).textContent = 'fragment size (bp)';
   }
 
   function buildTrace(svg, peaks) {
@@ -792,7 +795,7 @@
     const x = TRACE_PAD + (peak.center / 1000) * (TRACE_W - TRACE_PAD * 2);
     const y = (TRACE_H - TRACE_PAD) - peak.height * (TRACE_H - TRACE_PAD * 2);
     DNA.el('line', { x1: x, y1: y - 4, x2: x, y2: y - 24, stroke: 'var(--ink-faint)', 'stroke-width': 1.3 }, svg);
-    DNA.el('text', { x: x + 6, y: y - 16, 'text-anchor': 'start', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = label;
+    DNA.el('text', { x: x + 6, y: y - 16, 'text-anchor': 'start', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = label;
   }
 
   // ---------- Fragmentation QC: a gel of under/perfectly/over-sheared samples
@@ -839,7 +842,7 @@
           const bright = data.ladderBright.includes(bp);
           DNA.el('rect', { x: lx - 3, y: y - 2.5, width: laneW + 6, height: 5, rx: 2.5, fill: 'var(--gel-band)', opacity: bright ? 0.95 : 0.5 }, svg);
         });
-        DNA.el('text', { x: cx, y: GEL_Y + GEL_H + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = 'Ladder';
+        DNA.el('text', { x: cx, y: GEL_Y + GEL_H + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = 'Ladder';
         return;
       }
 
@@ -851,7 +854,7 @@
         if (v < 0.03) continue;
         const y = bpToGelY(bp, yTop, yBottom);
         const h = (yBottom - yTop) / steps + 1.4;
-        DNA.el('rect', { x: bx, y: y - h / 2, width: bw, height: h, rx: Math.min(h / 2, 2.5), fill: s.color, opacity: Math.min(0.92, v) }, svg);
+        DNA.el('rect', { x: bx, y: y - h / 2, width: bw, height: h, rx: Math.min(h / 2, 2.5), fill: 'var(--gel-band)', opacity: Math.min(0.92, v) }, svg);
       }
 
       const hit = DNA.el('rect', {
@@ -863,7 +866,7 @@
       s.label.forEach((line, li) => {
         DNA.el('text', {
           x: cx, y: GEL_Y + GEL_H + 20 + li * 14, 'text-anchor': 'middle',
-          'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)'
+          'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
         }, svg).textContent = line;
       });
     });
@@ -893,11 +896,11 @@
     const maxCycle = data.maxCycle || 40;
     const xAt = c => x0 + (c / maxCycle) * (x1 - x0);
     [0, 10, 20, 30, 40].forEach(c => {
-      DNA.el('text', { x: xAt(c), y: y0 + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = c;
+      DNA.el('text', { x: xAt(c), y: y0 + 20, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = c;
     });
-    DNA.el('text', { x: (x0 + x1) / 2, y: y0 + 38, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = 'PCR cycle';
+    DNA.el('text', { x: (x0 + x1) / 2, y: y0 + 38, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = 'PCR cycle';
     DNA.el('text', {
-      x: padL - 46, y: (y0 + y1) / 2, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--ink-soft)',
+      x: padL - 46, y: (y0 + y1) / 2, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 14, fill: 'var(--ink-soft)',
       transform: `rotate(-90 ${padL - 46} ${(y0 + y1) / 2})`
     }, svg).textContent = 'Fluorescence (RFU)';
 
@@ -915,10 +918,10 @@
     DNA.el('path', { d, fill: 'none', stroke: 'var(--reg-p7)', 'stroke-width': 2.6 }, svg);
 
     DNA.el('line', { x1: x0, y1: yAt(thresholdV), x2: x1, y2: yAt(thresholdV), stroke: 'var(--ink-faint)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, svg);
-    DNA.el('text', { x: x1, y: yAt(thresholdV) - 7, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-faint)' }, svg).textContent = 'threshold';
+    DNA.el('text', { x: x1, y: yAt(thresholdV) - 7, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-faint)' }, svg).textContent = 'threshold';
 
     DNA.el('line', { x1: xAt(ct), y1: yAt(thresholdV), x2: xAt(ct), y2: y0, stroke: 'var(--reg-p7)', 'stroke-width': 1.3, 'stroke-dasharray': '3 3' }, svg);
-    DNA.el('text', { x: xAt(ct) + 8, y: yAt(thresholdV) + 20, 'text-anchor': 'start', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--reg-p7)', 'font-weight': 700 }, svg).textContent = `Ct ≈ ${ct}`;
+    DNA.el('text', { x: xAt(ct) + 8, y: yAt(thresholdV) + 20, 'text-anchor': 'start', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--reg-p7)', 'font-weight': 700 }, svg).textContent = `Ct ≈ ${ct}`;
   }
 
   // "Library QC (optional)" -- consolidated into Library PCR rather than a
@@ -973,25 +976,25 @@
       DNA.el('line', { x1: x, y1: y - 16, x2: x, y2: y + 16, stroke: 'var(--ink)', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, svg);
     });
     DNA.el('rect', { x: 30, y: 18, width: 12, height: 12, rx: 2, fill: 'var(--reg-read1)', opacity: 0.55 }, svg);
-    DNA.el('text', { x: 48, y: 28, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = 'GC-rich';
+    DNA.el('text', { x: 48, y: 28, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = 'GC-rich';
     DNA.el('rect', { x: 125, y: 18, width: 12, height: 12, rx: 2, fill: 'var(--reg-i5)', opacity: 0.55 }, svg);
-    DNA.el('text', { x: 143, y: 28, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-soft)' }, svg).textContent = 'AT-rich';
+    DNA.el('text', { x: 143, y: 28, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)' }, svg).textContent = 'AT-rich';
   }
 
   function drawGCCoverageChart(svg) {
     DNA.el('line', { x1: TRACE_PAD, y1: TRACE_H - TRACE_PAD, x2: TRACE_W - TRACE_PAD, y2: TRACE_H - TRACE_PAD, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
     [0, 25, 50, 75, 100].forEach(g => {
       const gx = TRACE_PAD + (g / 100) * (TRACE_W - TRACE_PAD * 2);
-      DNA.el('text', { x: gx, y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 16, fill: 'var(--ink-soft)' }, svg).textContent = g;
+      DNA.el('text', { x: gx, y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 18, fill: 'var(--ink-soft)' }, svg).textContent = g;
     });
-    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = '% GC content';
+    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 17, fill: 'var(--ink-soft)' }, svg).textContent = '% GC content';
 
     const topY = TRACE_PAD, botY = TRACE_H - TRACE_PAD, range = botY - topY;
     const x = g => TRACE_PAD + (g / 100) * (TRACE_W - TRACE_PAD * 2);
     const covY = v => botY - v * 0.55 * range;
 
     DNA.el('line', { x1: TRACE_PAD, y1: covY(1), x2: TRACE_W - TRACE_PAD, y2: covY(1), stroke: 'var(--ink-faint)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, svg);
-    DNA.el('text', { x: TRACE_W - TRACE_PAD, y: covY(1) - 7, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-faint)' }, svg).textContent = 'expected (even)';
+    DNA.el('text', { x: TRACE_W - TRACE_PAD, y: covY(1) - 7, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-faint)' }, svg).textContent = 'expected (even)';
 
     const n = 100;
     let d = '';
@@ -1023,7 +1026,7 @@
     });
     DNA.el('text', {
       x: cx, y: topY - spread - 10, 'text-anchor': 'middle',
-      'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)'
     }, svg).textContent = '~120 bp, no insert';
   }
 
@@ -1052,7 +1055,7 @@
     }, svg);
     DNA.el('text', {
       x: midX, y: topY - 14, 'text-anchor': 'middle',
-      'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--reg-p7)'
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 14, fill: 'var(--reg-p7)'
     }, svg).textContent = 'fusion junction';
   }
 
@@ -1080,15 +1083,15 @@
     DNA.el('line', { x1: TRACE_PAD, y1: TRACE_H - TRACE_PAD, x2: TRACE_W - TRACE_PAD, y2: TRACE_H - TRACE_PAD, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
     [0, 2, 4, 6, 8].forEach(c => {
       const cx = TRACE_PAD + (c / 8) * (TRACE_W - TRACE_PAD * 2);
-      DNA.el('text', { x: cx, y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 16, fill: 'var(--ink-soft)' }, svg).textContent = c;
+      DNA.el('text', { x: cx, y: TRACE_H + 18, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 18, fill: 'var(--ink-soft)' }, svg).textContent = c;
     });
-    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)' }, svg).textContent = 'PCR cycle';
+    DNA.el('text', { x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 17, fill: 'var(--ink-soft)' }, svg).textContent = 'PCR cycle';
 
     const topY = TRACE_PAD, botY = TRACE_H - TRACE_PAD, range = botY - topY;
     const x = c => TRACE_PAD + (c / 8) * (TRACE_W - TRACE_PAD * 2);
     const y = v => botY - v * range;
 
-    DNA.el('text', { x: TRACE_W - TRACE_PAD, y: topY - 6, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 11, fill: 'var(--ink-faint)' }, svg).textContent = '% unique reads';
+    DNA.el('text', { x: TRACE_W - TRACE_PAD, y: topY - 6, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-faint)' }, svg).textContent = '% unique reads';
 
     const n = 80;
     let d = '';

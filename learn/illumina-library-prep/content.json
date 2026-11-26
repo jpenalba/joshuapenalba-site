@@ -26,7 +26,9 @@
           { "type": "intact", "label": ["High MW"] },
           { "type": "moderate", "label": ["Moderate", "degradation"] },
           { "type": "degraded", "label": ["Heavy", "degradation"] }
-        ]
+        ],
+        "ladderBands": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+        "ladderBright": [500, 1000]
       },
       "qc": { "concentration": "42 ng/µL", "integrity": "DIN 8.9", "a260_280": "1.87", "a260_230": "2.2" },
       "quantMethods": [
