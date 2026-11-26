@@ -1571,6 +1571,34 @@
     });
   }
 
+  // "Input QC" sub-section -- a gel plus concentration/integrity metrics
+  // and the quantification-method accordion, consolidated into Starting
+  // material rather than its own step, matching how every later QC
+  // checkpoint (fragQC, libraryQC, finalQC) is folded into the step it
+  // belongs to instead of standing alone.
+  function buildInputQC(mount, data) {
+    mount.innerHTML = `
+      <div class="breakit-head"><h3>${data.title}</h3></div>
+      <p class="breakit-text">${data.caption}</p>
+      <div class="fragqc-visual">
+        <div class="stage-card">
+          <svg class="inputqc-stage" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Gel electrophoresis of input DNA quality"></svg>
+        </div>
+        <div class="data-panel">
+          <div class="step-widgets"></div>
+        </div>
+      </div>
+    `;
+    drawGel(mount.querySelector('.inputqc-stage'), data.gel);
+    const widgets = mount.querySelector('.step-widgets');
+    widgets.innerHTML = Object.entries(data.qc).map(([k, v]) =>
+      `<div class="qc-row"><span class="qc-key mono">${k.replace(/_/g, '/').toUpperCase()}</span><span class="qc-val mono">${v}</span></div>`
+    ).join('');
+    if (data.quantMethods) {
+      buildMethodAccordion(widgets, data.quantMethods, 'inputqc');
+    }
+  }
+
   // Optional "Fragmentation QC" sub-section -- a gel of under/perfectly/
   // over-sheared samples cross-linked to their size-distribution curves,
   // consolidated into the Fragmentation step rather than its own step.
@@ -1687,6 +1715,7 @@
         </div>
       </div>
       ${step.breakIt ? '<div class="breakit-block"></div>' : ''}
+      ${step.inputQC ? '<div class="breakit-block inputqc-block"></div>' : ''}
       ${step.fragQC ? '<div class="breakit-block fragqc-block"></div>' : ''}
       ${step.libraryQC ? '<div class="breakit-block libqc-block"></div>' : ''}
       ${step.finalAnatomy ? '<div class="breakit-block final-anatomy-block"></div>' : ''}
@@ -1703,8 +1732,6 @@
     // --- stage ---
     if (step.id === 'step0') {
       drawGenomicBulk(stageSvg);
-    } else if (step.id === 'step1') {
-      drawGel(stageSvg, step.gel);
     } else if (step.id === 'step2') {
       const frag = buildFragmentationAnimation(stageSvg);
       section._fragTimeline = frag.timeline;
@@ -1773,6 +1800,9 @@
 
     if (step.breakIt) {
       buildBreakIt(section.querySelector('.breakit-block'), step.breakIt);
+    }
+    if (step.inputQC) {
+      buildInputQC(section.querySelector('.inputqc-block'), step.inputQC);
     }
     if (step.fragQC) {
       buildFragQC(section.querySelector('.fragqc-block'), step.fragQC);
