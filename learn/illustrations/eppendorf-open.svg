@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" baseProfile="tiny" version="1.2" viewBox="0 0 83.02 123.66">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <path d="M44.23,41.4v36.64h0c-.02,1.12.05,2.46.29,3.95.23,1.41.57,2.64.91,3.65l7.41,28.51c.28,1.67,1.74,2.91,3.44,2.91s3.16-1.24,3.44-2.91l7.41-28.51h-.06c.35-1.01.68-2.24.91-3.65.24-1.5.31-2.84.29-3.95h0v-36.64h-24.04Z" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".4"/>
+  <path d="M49.85,38.46h-6.81v1.96c0,.54.4.98.89.98h24.44c.49,0,.89-.44.89-.98v-1.96h-19.41Z" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".47"/>
+  <line x1="73.29" y1="65.66" x2="34.41" y2="65.66" fill="none"/>
+  <path d="M39.23,39.26c-.17,0-.33-.05-.46-.13-.04-.02-.08-.05-.11-.07l-1.64-1.08-3.41-2.25-.66,1,4.84,3.19.24.16.1.06h0c.27.13.58.21.9.21h4.01v-1.09h-3.8Z" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".46"/>
+  <g>
+    <path d="M9.94,18.05l21.51,19.05c.44.39,1.11.35,1.49-.09l.04-.04.72-.82.03-.03c.39-.44.35-1.11-.09-1.49l-.87-.77-2.66-2.36-2.44-2.16-14.53-12.87-1-.89c-.44-.39-1.11-.35-1.49.09l-.79.89c-.39.44-.35,1.11.09,1.49Z" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".47"/>
+    <rect x="11.48" y="20.87" width="26.03" height="4.84" transform="translate(27.39 56.96) rotate(-138.47)" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".47"/>
+  </g>
+  <line x1="60.82" y1="47.41" x2="66.26" y2="47.41" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".47"/>
+  <line x1="60.82" y1="63.65" x2="66.26" y2="63.65" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".47"/>
+  <line x1="60.82" y1="80.22" x2="66.26" y2="80.22" fill="#ecf1f2" stroke="#5f6670" stroke-miterlimit="10" stroke-width=".47"/>
+  <line x1="40.6" y1="80.22" x2="83.02" y2="80.22" fill="none"/>
+</svg>
