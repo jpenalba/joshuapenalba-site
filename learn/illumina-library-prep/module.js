@@ -29,8 +29,10 @@
 
   const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const PCR_ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
-  const PCR_ICON_REPLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
+  // Shared play/replay icons for any step with a button-triggered stage
+  // animation (PCR, fragmentation, ...), not just PCR specifically.
+  const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const ICON_REPLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
 
   // ---------- shared stage geometry (generous, since the molecule is the focal point) ----------
   const STAGE_W = 700, STAGE_H = 230, MID_Y = 115;
@@ -420,6 +422,64 @@
     });
     mount.appendChild(acc);
     return acc;
+  }
+
+  // Fragmentation, animated: a single long genomic molecule (two parallel
+  // grey strands) shears at several points and its pieces scatter out to
+  // the exact same ragged-fragment layout drawSmear('ragged') draws
+  // statically, so the animation's resting frame matches the old static
+  // image pixel-for-pixel. Each fragment is drawn up front at its real
+  // final position, then FLIPped: pulled back onto the long strand's line
+  // (y offset only, same x/width) and faded out, so "settling" is just
+  // one clean y-tween back to 0 rather than redrawing anything mid-flight.
+  function buildFragmentationAnimation(svg) {
+    svg.innerHTML = '';
+    const y = MID_Y, height = 7, gap = 5;
+    const longX = 55, longEndX = 665;
+    // The long strand uses its own wider gap (just for legibility as two
+    // separate lines at this zoomed-out scale) -- the fragments below keep
+    // the original height/gap so their settled layout matches the old
+    // static image exactly.
+    const longGap = 14;
+    const topY = y - longGap / 2 - height, botY = y + longGap / 2;
+
+    const label = DNA.el('text', {
+      x: STAGE_W / 2, y: 24, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace",
+      'font-size': 17, fill: 'var(--ink-soft)'
+    }, svg);
+    label.textContent = 'Long genomic DNA';
+
+    const longG = DNA.group(svg, {});
+    DNA.el('rect', { x: longX, y: topY, width: longEndX - longX, height, rx: 3, fill: 'var(--mol-backbone)' }, longG);
+    DNA.el('rect', { x: longX, y: botY, width: longEndX - longX, height, rx: 3, fill: 'var(--mol-backbone)' }, longG);
+
+    // Break points sit between each pair of neighbouring final fragments --
+    // where a cut must have happened for the pieces to land where they do.
+    const sortedMid = SMEAR.map(f => f.x + f.w / 2).sort((a, b) => a - b);
+    const breakXs = [];
+    for (let i = 0; i < sortedMid.length - 1; i++) breakXs.push((sortedMid[i] + sortedMid[i + 1]) / 2);
+    const ticks = breakXs.map(bx => DNA.el('line', {
+      x1: bx, y1: topY - 6, x2: bx, y2: botY + 6, stroke: 'var(--reg-p7)', 'stroke-width': 2, opacity: 0
+    }, svg));
+
+    const fragGroups = SMEAR.map(f => {
+      const g = DNA.group(svg, {});
+      DNA.fragmentOverhang(g, { x: f.x, y: f.y, width: f.w, height: 7, gap: 5, overhangs: f.oh });
+      gsap.set(g, { y: y - f.y, opacity: 0 });
+      return g;
+    });
+
+    const tl = gsap.timeline({ paused: true });
+    const t0 = 0.6, t1 = t0 + 0.55, t2 = t1 + 0.1, t3 = t2 + 0.1;
+    tl.to(ticks, { opacity: 1, duration: 0.25, stagger: 0.04 }, t0)
+      .to(longG, { y: '+=2', duration: 0.08, repeat: 5, yoyo: true, ease: 'power1.inOut' }, t0)
+      .to(label, { opacity: 0, duration: 0.3 }, t0)
+      .to(longG, { opacity: 0, duration: 0.4 }, t1)
+      .to(ticks, { opacity: 0, duration: 0.3 }, t1)
+      .to(fragGroups, { opacity: 1, duration: 0.3, stagger: 0.04 }, t2)
+      .to(fragGroups, { y: 0, duration: 0.9, stagger: 0.04, ease: 'power2.out' }, t3);
+
+    return { timeline: tl };
   }
 
   function drawSmear(svg, endStyle) {
@@ -1517,7 +1577,7 @@
         <div class="stage-card">
           <div class="stage-svg-wrap">
             <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
-            ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
+            ${step.animated ? `<button type="button" class="stage-play-btn" aria-label="Play animation">${ICON_PLAY}</button>` : ''}
           </div>
           ${step.extractionMethods || step.fragMethods || step.indexMethods || step.ampMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
         </div>
@@ -1545,7 +1605,21 @@
     } else if (step.id === 'step1') {
       drawGel(stageSvg, step.gel);
     } else if (step.id === 'step2') {
-      drawSmear(stageSvg, 'ragged');
+      const frag = buildFragmentationAnimation(stageSvg);
+      section._fragTimeline = frag.timeline;
+      const fragPlayBtn = section.querySelector('.stage-play-btn');
+      fragPlayBtn.setAttribute('aria-label', 'Play fragmentation animation');
+      let fragStarted = false;
+      fragPlayBtn.addEventListener('click', () => {
+        if (!fragStarted) {
+          fragStarted = true;
+          fragPlayBtn.innerHTML = ICON_REPLAY;
+          fragPlayBtn.setAttribute('aria-label', 'Replay fragmentation animation');
+          frag.timeline.play();
+        } else {
+          frag.timeline.restart();
+        }
+      });
     } else if (step.id === 'step3') {
       drawSmear(stageSvg, 'blunt');
     } else if (step.id === 'step5') {
@@ -1553,12 +1627,13 @@
     } else if (step.id === 'step7') {
       const pcr = buildPCRAnimation(stageSvg, step.pcrCycles);
       section._pcrTimeline = pcr.timeline;
-      const playBtn = section.querySelector('.pcr-play-btn');
+      const playBtn = section.querySelector('.stage-play-btn');
+      playBtn.setAttribute('aria-label', 'Play PCR animation');
       let pcrStarted = false;
       playBtn.addEventListener('click', () => {
         if (!pcrStarted) {
           pcrStarted = true;
-          playBtn.innerHTML = PCR_ICON_REPLAY;
+          playBtn.innerHTML = ICON_REPLAY;
           playBtn.setAttribute('aria-label', 'Replay PCR animation');
           pcr.timeline.play();
         } else {
