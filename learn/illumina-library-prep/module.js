@@ -34,6 +34,24 @@
   const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
   const ICON_REPLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
 
+  // Wires a step's .stage-play-btn to a GSAP timeline: first click plays it
+  // and swaps the icon to replay, every click after that restarts it.
+  function wirePlayButton(section, timeline, playLabel, replayLabel) {
+    const btn = section.querySelector('.stage-play-btn');
+    btn.setAttribute('aria-label', playLabel);
+    let started = false;
+    btn.addEventListener('click', () => {
+      if (!started) {
+        started = true;
+        btn.innerHTML = ICON_REPLAY;
+        btn.setAttribute('aria-label', replayLabel);
+        timeline.play();
+      } else {
+        timeline.restart();
+      }
+    });
+  }
+
   // ---------- shared stage geometry (generous, since the molecule is the focal point) ----------
   const STAGE_W = 700, STAGE_H = 230, MID_Y = 115;
   const FOCAL_W = 320, FOCAL_H = 26, FOCAL_X = (STAGE_W - FOCAL_W) / 2;
@@ -426,9 +444,9 @@
 
   // Fragmentation, animated: a single long genomic molecule (two parallel
   // grey strands) shears at several points and its pieces scatter out to
-  // the exact same ragged-fragment layout drawSmear('ragged') draws
-  // statically, so the animation's resting frame matches the old static
-  // image pixel-for-pixel. Each fragment is drawn up front at its real
+  // the same ragged, scattered SMEAR layout the old static image used, so
+  // the animation's resting frame matches it pixel-for-pixel. Each
+  // fragment is drawn up front at its real
   // final position, then FLIPped: pulled back onto the long strand's line
   // (y offset only, same x/width) and faded out, so "settling" is just
   // one clean y-tween back to 0 rather than redrawing anything mid-flight.
@@ -482,27 +500,54 @@
     return { timeline: tl };
   }
 
-  function drawSmear(svg, endStyle) {
-    SMEAR.forEach(f => {
-      if (endStyle === 'ragged') {
-        // Freshly sheared: the two strands don't end at the same point, so
-        // each fragment gets its own 5'/3' overhangs instead of a single
-        // blunt bar.
-        DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height: 7, gap: 5, overhangs: f.oh });
-        return;
-      }
-      // Blunt, end-repaired and A-tailed: two equal-length strand bars
-      // (zero overhang), each strand's 5' phosphate and 3' A diagonally
-      // opposite each other, since the strands are antiparallel.
-      const height = 7, gap = 5;
-      DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height, gap, overhangs: {} });
+  // End repair & A-tailing, animated: starts from Fragmentation's settled
+  // ragged fragments (same SMEAR layout/overhangs), straightens each one's
+  // jagged ends into flush, equal-length blunt strands, then reveals the
+  // 5' phosphate (P) markers and finally the 3' A-tail (A) markers -- the
+  // same diagonal placement (P top-left/bottom-right, A top-right/
+  // bottom-left) the old static blunt+P+A image used, so the resting frame
+  // matches it exactly.
+  function buildEndRepairAnimation(svg) {
+    svg.innerHTML = '';
+    const height = 7, gap = 5;
+
+    const fragments = SMEAR.map(f => {
+      const g = DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height, gap, overhangs: f.oh });
+      const topRect = g.children[0], botRect = g.children[1];
       const topY = f.y - gap / 2 - height / 2;
       const botY = f.y + gap / 2 + height / 2;
-      DNA.phosphateDot(svg, { x: f.x, y: topY, r: 6 });
-      DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
-      DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
-      DNA.phosphateDot(svg, { x: f.x + f.w, y: botY, r: 6 });
+
+      const pTop = DNA.phosphateDot(svg, { x: f.x, y: topY, r: 6 });
+      const aTopRight = DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
+      const aBotLeft = DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
+      const pBotRight = DNA.phosphateDot(svg, { x: f.x + f.w, y: botY, r: 6 });
+      gsap.set([pTop, aTopRight, aBotLeft, pBotRight], { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' });
+
+      return { f, topRect, botRect, pTop, aTopRight, aBotLeft, pBotRight };
     });
+
+    const n = fragments.length;
+    const tl = gsap.timeline({ paused: true });
+
+    const t0 = 0.5, straightenStagger = 0.06, straightenDur = 1.0;
+    fragments.forEach((frag, i) => {
+      const at = t0 + i * straightenStagger;
+      tl.to(frag.topRect, { attr: { x: frag.f.x, width: frag.f.w }, duration: straightenDur, ease: 'power1.inOut' }, at)
+        .to(frag.botRect, { attr: { x: frag.f.x, width: frag.f.w }, duration: straightenDur, ease: 'power1.inOut' }, at);
+    });
+
+    const pStagger = 0.05, pDur = 0.4;
+    const t1 = t0 + (n - 1) * straightenStagger + straightenDur + 0.3;
+    fragments.forEach((frag, i) => {
+      tl.to([frag.pTop, frag.pBotRight], { opacity: 1, scale: 1, duration: pDur }, t1 + i * pStagger);
+    });
+
+    const t2 = t1 + (n - 1) * pStagger + pDur + 0.3;
+    fragments.forEach((frag, i) => {
+      tl.to([frag.aTopRight, frag.aBotLeft], { opacity: 1, scale: 1, duration: pDur }, t2 + i * pStagger);
+    });
+
+    return { timeline: tl };
   }
 
   // Background fragments already carrying Y-adapters -- kept in the top and
@@ -1607,39 +1652,17 @@
     } else if (step.id === 'step2') {
       const frag = buildFragmentationAnimation(stageSvg);
       section._fragTimeline = frag.timeline;
-      const fragPlayBtn = section.querySelector('.stage-play-btn');
-      fragPlayBtn.setAttribute('aria-label', 'Play fragmentation animation');
-      let fragStarted = false;
-      fragPlayBtn.addEventListener('click', () => {
-        if (!fragStarted) {
-          fragStarted = true;
-          fragPlayBtn.innerHTML = ICON_REPLAY;
-          fragPlayBtn.setAttribute('aria-label', 'Replay fragmentation animation');
-          frag.timeline.play();
-        } else {
-          frag.timeline.restart();
-        }
-      });
+      wirePlayButton(section, frag.timeline, 'Play fragmentation animation', 'Replay fragmentation animation');
     } else if (step.id === 'step3') {
-      drawSmear(stageSvg, 'blunt');
+      const endRepair = buildEndRepairAnimation(stageSvg);
+      section._endRepairTimeline = endRepair.timeline;
+      wirePlayButton(section, endRepair.timeline, 'Play end repair animation', 'Replay end repair animation');
     } else if (step.id === 'step5') {
       drawAdapterLigation(stageSvg);
     } else if (step.id === 'step7') {
       const pcr = buildPCRAnimation(stageSvg, step.pcrCycles);
       section._pcrTimeline = pcr.timeline;
-      const playBtn = section.querySelector('.stage-play-btn');
-      playBtn.setAttribute('aria-label', 'Play PCR animation');
-      let pcrStarted = false;
-      playBtn.addEventListener('click', () => {
-        if (!pcrStarted) {
-          pcrStarted = true;
-          playBtn.innerHTML = ICON_REPLAY;
-          playBtn.setAttribute('aria-label', 'Replay PCR animation');
-          pcr.timeline.play();
-        } else {
-          pcr.timeline.restart();
-        }
-      });
+      wirePlayButton(section, pcr.timeline, 'Play PCR animation', 'Replay PCR animation');
     } else if (step.id === 'step10') {
       drawNormalizeClusters(stageSvg);
     } else if (step.id === 'step9') {
