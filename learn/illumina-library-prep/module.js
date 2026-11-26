@@ -54,7 +54,6 @@
 
   // ---------- shared stage geometry (generous, since the molecule is the focal point) ----------
   const STAGE_W = 700, STAGE_H = 230, MID_Y = 115;
-  const FOCAL_W = 320, FOCAL_H = 26, FOCAL_X = (STAGE_W - FOCAL_W) / 2;
 
   const REGION_DEFS = [
     { ...DNA.REGIONS.p5, width: 46 },
@@ -561,14 +560,6 @@
     return { timeline: tl };
   }
 
-  // Background fragments already carrying Y-adapters -- kept in the top and
-  // bottom margins so they never overlap the large focal fragment in the
-  // centre of the stage.
-  const LIGATION_BG = [
-    { x: 50, y: 32, w: 70 }, { x: 260, y: 22, w: 60 }, { x: 480, y: 35, w: 80 },
-    { x: 70, y: 198, w: 65 }, { x: 420, y: 205, w: 70 }, { x: 560, y: 188, w: 55 }
-  ];
-
   // One ligated adapter end: a short double-stranded "stem" (the primer
   // binding site) runs parallel, just past the insert, before each strand
   // peels off into its own single-stranded Y arm -- so the strands stay
@@ -583,89 +574,57 @@
   }
 
   // Adapter ligation, animated: starts from End repair's settled blunt+P+A
-  // fragments. The one already sitting on the stage's centre line (same y
-  // as MID_Y) becomes the zoomed-in focal fragment -- its old P/A markers
-  // fade as its bar grows out to FOCAL_W, then a Y-adapter grows onto each
-  // end and the A/T junction pairing fades in -- while the other six
-  // fragments simply fade out as the six already-ligated background
-  // fragments (LIGATION_BG) fade in behind it, the same split the old
-  // static image used.
+  // fragments, same size and position -- nothing resizes or relocates. A
+  // Y-adapter (with its T-overhang) slides in from outside each end and
+  // attaches there; right as it lands, the P marker at that end fades
+  // away and a T-overhang marker fades in in its exact spot, while the A
+  // marker next to it never moves at all -- it was already the correct
+  // junction marker (the adapter's T pairs with the insert's own A-tail).
   function buildAdapterLigationAnimation(svg) {
     svg.innerHTML = '';
     const height = 7, gap = 5;
+    const adFh = 7, adFgap = 5, adStemW = 9, adArmLength = 24, adSpread = 14;
 
-    const heroIndex = SMEAR.findIndex(f => f.y === MID_Y);
-    const startFrags = SMEAR.map(f => {
-      const g = DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height, gap, overhangs: {} });
-      const topRect = g.children[0], botRect = g.children[1];
+    const fragments = SMEAR.map(f => {
+      DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height, gap, overhangs: {} });
       const topY = f.y - gap / 2 - height / 2;
       const botY = f.y + gap / 2 + height / 2;
+
       const pTop = DNA.phosphateDot(svg, { x: f.x, y: topY, r: 6 });
-      const aTopRight = DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
-      const aBotLeft = DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
       const pBotRight = DNA.phosphateDot(svg, { x: f.x + f.w, y: botY, r: 6 });
-      return { topRect, botRect, markers: [pTop, aTopRight, aBotLeft, pBotRight] };
-    });
+      DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
+      DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
 
-    const hero = startFrags[heroIndex];
-    const others = startFrags.filter((_, i) => i !== heroIndex);
+      const tTopLeft = DNA.tOverhangSquare(svg, { x: f.x, y: topY, size: 11 });
+      const tBotRight = DNA.tOverhangSquare(svg, { x: f.x + f.w, y: botY, size: 11 });
+      gsap.set([tTopLeft, tBotRight], { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' });
 
-    const bgGroups = LIGATION_BG.map(f => {
-      const g = DNA.group(svg, {});
-      const fh = 5, fgap = 3, stemW = 6, armLength = 12, spread = 7;
-      DNA.fragmentOverhang(g, { x: f.x, y: f.y, width: f.w, height: fh, gap: fgap, overhangs: {} });
-      drawYAdapterEnd(g, { x: f.x, y: f.y, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread, colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)' });
-      drawYAdapterEnd(g, { x: f.x + f.w, y: f.y, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread, colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)' });
-      gsap.set(g, { opacity: 0 });
-      return g;
-    });
+      const leftAdapter = DNA.group(svg, {});
+      drawYAdapterEnd(leftAdapter, {
+        x: f.x, y: f.y, dir: -1, fh: adFh, fgap: adFgap, stemW: adStemW,
+        stemColor: 'var(--reg-read1)', armLength: adArmLength, spread: adSpread,
+        colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
+      });
+      const rightAdapter = DNA.group(svg, {});
+      drawYAdapterEnd(rightAdapter, {
+        x: f.x + f.w, y: f.y, dir: 1, fh: adFh, fgap: adFgap, stemW: adStemW,
+        stemColor: 'var(--reg-read2)', armLength: adArmLength, spread: adSpread,
+        colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
+      });
+      gsap.set(leftAdapter, { x: -40, opacity: 0 });
+      gsap.set(rightAdapter, { x: 40, opacity: 0 });
 
-    const heroFh = 12, heroFgap = 8, heroStemW = 18, heroArmLength = 44, heroSpread = 26;
-    const heroAdapterLeft = DNA.group(svg, {});
-    drawYAdapterEnd(heroAdapterLeft, {
-      x: FOCAL_X, y: MID_Y, dir: -1, fh: heroFh, fgap: heroFgap, stemW: heroStemW,
-      stemColor: 'var(--reg-read1)', armLength: heroArmLength, spread: heroSpread,
-      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
+      return { pTop, pBotRight, tTopLeft, tBotRight, leftAdapter, rightAdapter };
     });
-    const heroAdapterRight = DNA.group(svg, {});
-    drawYAdapterEnd(heroAdapterRight, {
-      x: FOCAL_X + FOCAL_W, y: MID_Y, dir: 1, fh: heroFh, fgap: heroFgap, stemW: heroStemW,
-      stemColor: 'var(--reg-read2)', armLength: heroArmLength, spread: heroSpread,
-      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
-    });
-    gsap.set([heroAdapterLeft, heroAdapterRight], { opacity: 0, scale: 0.5, transformOrigin: '50% 50%' });
-
-    // A/T pairing at each junction, diagonally opposite as in End repair/
-    // A-tailing: the insert's own A-tail sits top-right/bottom-left, and
-    // the adapter's complementary T-overhang sits top-left/bottom-right.
-    const markerSize = 13;
-    const topMarkerY = MID_Y - markerSize / 2 - 1;
-    const botMarkerY = MID_Y + markerSize / 2 + 1;
-    const junctionMarkers = [
-      DNA.tOverhangSquare(svg, { x: FOCAL_X, y: topMarkerY, size: markerSize }),
-      DNA.aTailSquare(svg, { x: FOCAL_X, y: botMarkerY, size: markerSize }),
-      DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: topMarkerY, size: markerSize }),
-      DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W, y: botMarkerY, size: markerSize })
-    ];
-    gsap.set(junctionMarkers, { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' });
 
     const tl = gsap.timeline({ paused: true });
-    const t0 = 0.5, growDur = 1.0;
-
-    others.forEach((frag, i) => {
-      tl.to([frag.topRect, frag.botRect], { opacity: 0, duration: 0.5 }, t0 + i * 0.03)
-        .to(frag.markers, { opacity: 0, duration: 0.3 }, t0 + i * 0.03);
+    const t0 = 0.5, stagger = 0.12, slideDur = 0.8, swapDur = 0.4;
+    fragments.forEach((frag, i) => {
+      const at = t0 + i * stagger;
+      tl.to([frag.leftAdapter, frag.rightAdapter], { x: 0, opacity: 1, duration: slideDur, ease: 'power2.out' }, at)
+        .to([frag.pTop, frag.pBotRight], { opacity: 0, duration: swapDur }, at + slideDur)
+        .to([frag.tTopLeft, frag.tBotRight], { opacity: 1, scale: 1, duration: swapDur }, at + slideDur);
     });
-    tl.to(hero.markers, { opacity: 0, duration: 0.3 }, t0)
-      .to(hero.topRect, { attr: { x: FOCAL_X, width: FOCAL_W }, duration: growDur, ease: 'power1.inOut' }, t0)
-      .to(hero.botRect, { attr: { x: FOCAL_X, width: FOCAL_W }, duration: growDur, ease: 'power1.inOut' }, t0);
-
-    const t1 = t0 + growDur + 0.3;
-    tl.to(bgGroups, { opacity: 1, duration: 0.4, stagger: 0.05 }, t1)
-      .to([heroAdapterLeft, heroAdapterRight], { opacity: 1, scale: 1, duration: 0.5 }, t1);
-
-    const t2 = t1 + 0.5 + 0.3;
-    tl.to(junctionMarkers, { opacity: 1, scale: 1, duration: 0.4, stagger: 0.08 }, t2);
 
     return { timeline: tl };
   }
