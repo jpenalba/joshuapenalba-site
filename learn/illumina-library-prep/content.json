@@ -13,6 +13,26 @@
       "title": "Starting material",
       "caption": "Ideally, we would start with high-molecular-weight DNA, although degraded DNA can still work for standard Illumina library preps. The quality of the DNA is dependent on how well the tissue was preserved and the quantity is dependent on the tissue type and amount. Different extraction methods can have different efficacies but the most important factor is how well the tissues have been preserved.",
       "trace": { "peaks": [ { "center": 900, "height": 1.0, "width": 70 } ] },
+      "extractionMethods": [
+        {
+          "id": "column",
+          "label": "Column-based (silica membrane)",
+          "summary": "DNA selectively binds a silica membrane in a chaotropic salt buffer, impurities wash through, then DNA elutes in a low-salt buffer or water.",
+          "detail": "Lysed sample is mixed with a chaotropic salt buffer (e.g. guanidinium) that makes DNA bind a silica membrane in a spin column, while proteins, salts and other contaminants pass through during wash steps; purified DNA is then eluted off the membrane. It's fast and scales well with manual or automated (robotic) processing, and needs no hazardous organic solvents, but the membrane's binding capacity can shear or exclude very large fragments, and repeated washes can reduce yield from low-input samples."
+        },
+        {
+          "id": "beads",
+          "label": "Magnetic bead-based",
+          "summary": "Paramagnetic beads reversibly bind DNA in a binding buffer, are pulled out of solution with a magnet, washed, then DNA is released in an elution buffer.",
+          "detail": "Similar chemistry to silica columns, but the solid phase is a suspension of paramagnetic beads instead of a fixed membrane: beads are mixed directly into the lysate, bound DNA is captured against a magnetic rack, unbound contaminants are washed away, and the beads are resuspended in elution buffer to release the DNA. It's the easiest method to automate in a 96-well format and handles very high-molecular-weight DNA more gently than a column, but the reagents tend to cost more per sample than columns."
+        },
+        {
+          "id": "phenolchloroform",
+          "label": "Phenol-chloroform extraction",
+          "summary": "A classic manual method: DNA partitions into the aqueous phase of a phenol-chloroform mixture, leaving proteins and lipids behind in the organic phase.",
+          "detail": "Lysed sample is mixed with phenol and chloroform; after centrifugation it separates into an upper aqueous phase holding the DNA and a lower organic phase holding denatured proteins and lipids, with cellular debris trapped at the interface. The aqueous phase is transferred off and the DNA is concentrated by ethanol precipitation. It yields very high-molecular-weight, high-purity DNA and needs no specialised kit, but it's slow, hands-on, and uses hazardous, toxic organic solvents that need careful handling and disposal."
+        }
+      ],
       "qc": null
     },
     {
