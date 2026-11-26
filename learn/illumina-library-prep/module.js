@@ -501,12 +501,14 @@
   }
 
   // End repair & A-tailing, animated: starts from Fragmentation's settled
-  // ragged fragments (same SMEAR layout/overhangs), straightens each one's
-  // jagged ends into flush, equal-length blunt strands, then reveals the
-  // 5' phosphate (P) markers and finally the 3' A-tail (A) markers -- the
-  // same diagonal placement (P top-left/bottom-right, A top-right/
-  // bottom-left) the old static blunt+P+A image used, so the resting frame
-  // matches it exactly.
+  // ragged fragments (same SMEAR layout/overhangs), fills in each jagged
+  // end rather than trimming it -- a polymerase extends whichever strand
+  // is recessed at each end out to match the strand that already reaches
+  // furthest there, so every strand only ever grows (or holds still if it
+  // was already the longer one), never shrinks. The fragment's blunt
+  // length after that is therefore its longest reach on each side, not its
+  // original overhang "core" -- then reveals the 5' phosphate (P) markers
+  // and finally the 3' A-tail (A) markers at those same extended ends.
   function buildEndRepairAnimation(svg) {
     svg.innerHTML = '';
     const height = 7, gap = 5;
@@ -517,13 +519,22 @@
       const topY = f.y - gap / 2 - height / 2;
       const botY = f.y + gap / 2 + height / 2;
 
-      const pTop = DNA.phosphateDot(svg, { x: f.x, y: topY, r: 6 });
-      const aTopRight = DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
-      const aBotLeft = DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
-      const pBotRight = DNA.phosphateDot(svg, { x: f.x + f.w, y: botY, r: 6 });
+      // Fill-in target: each side extends out to whichever strand already
+      // reaches furthest there (never in), so the blunt result is as long
+      // as the longest-reaching strand on each side, not the shorter core.
+      const leftExtent = Math.max(f.oh.topLeft, f.oh.bottomLeft);
+      const rightExtent = Math.max(f.oh.topRight, f.oh.bottomRight);
+      const bluntX = f.x - leftExtent;
+      const bluntW = f.w + leftExtent + rightExtent;
+      const bluntRightX = bluntX + bluntW;
+
+      const pTop = DNA.phosphateDot(svg, { x: bluntX, y: topY, r: 6 });
+      const aTopRight = DNA.aTailSquare(svg, { x: bluntRightX, y: topY, size: 11 });
+      const aBotLeft = DNA.aTailSquare(svg, { x: bluntX, y: botY, size: 11 });
+      const pBotRight = DNA.phosphateDot(svg, { x: bluntRightX, y: botY, r: 6 });
       gsap.set([pTop, aTopRight, aBotLeft, pBotRight], { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' });
 
-      return { f, topRect, botRect, pTop, aTopRight, aBotLeft, pBotRight };
+      return { f, topRect, botRect, bluntX, bluntW, pTop, aTopRight, aBotLeft, pBotRight };
     });
 
     const n = fragments.length;
@@ -532,8 +543,8 @@
     const t0 = 0.5, straightenStagger = 0.06, straightenDur = 1.0;
     fragments.forEach((frag, i) => {
       const at = t0 + i * straightenStagger;
-      tl.to(frag.topRect, { attr: { x: frag.f.x, width: frag.f.w }, duration: straightenDur, ease: 'power1.inOut' }, at)
-        .to(frag.botRect, { attr: { x: frag.f.x, width: frag.f.w }, duration: straightenDur, ease: 'power1.inOut' }, at);
+      tl.to(frag.topRect, { attr: { x: frag.bluntX, width: frag.bluntW }, duration: straightenDur, ease: 'power1.inOut' }, at)
+        .to(frag.botRect, { attr: { x: frag.bluntX, width: frag.bluntW }, duration: straightenDur, ease: 'power1.inOut' }, at);
     });
 
     const pStagger = 0.05, pDur = 0.4;
