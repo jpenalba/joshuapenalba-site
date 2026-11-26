@@ -13,6 +13,26 @@
       "title": "Starting material",
       "caption": "Ideally, we would start with high-molecular-weight DNA, although degraded DNA can still work for standard Illumina library preps. The quality of the DNA is dependent on how well the tissue was preserved and the quantity is dependent on the tissue type and amount. Different extraction methods can have different efficacies but the most important factor is how well the tissues have been preserved.",
       "trace": { "peaks": [ { "center": 900, "height": 1.0, "width": 70 } ] },
+      "extractionMethods": [
+        {
+          "id": "column",
+          "label": "Column-based (silica membrane)",
+          "summary": "DNA selectively binds a silica membrane in a chaotropic salt buffer, impurities wash through, then DNA elutes in a low-salt buffer or water.",
+          "detail": "Lysed sample is mixed with a chaotropic salt buffer (e.g. guanidinium) that makes DNA bind a silica membrane in a spin column, while proteins, salts and other contaminants pass through during wash steps; purified DNA is then eluted off the membrane. It's fast and scales well with manual or automated (robotic) processing, and needs no hazardous organic solvents, but the membrane's binding capacity can shear or exclude very large fragments, and repeated washes can reduce yield from low-input samples."
+        },
+        {
+          "id": "beads",
+          "label": "Magnetic bead-based",
+          "summary": "Paramagnetic beads reversibly bind DNA in a binding buffer, are pulled out of solution with a magnet, washed, then DNA is released in an elution buffer.",
+          "detail": "Similar chemistry to silica columns, but the solid phase is a suspension of paramagnetic beads instead of a fixed membrane: beads are mixed directly into the lysate, bound DNA is captured against a magnetic rack, unbound contaminants are washed away, and the beads are resuspended in elution buffer to release the DNA. It's the easiest method to automate in a 96-well format and handles very high-molecular-weight DNA more gently than a column, but the reagents tend to cost more per sample than columns."
+        },
+        {
+          "id": "phenolchloroform",
+          "label": "Phenol-chloroform extraction",
+          "summary": "A classic manual method: DNA partitions into the aqueous phase of a phenol-chloroform mixture, leaving proteins and lipids behind in the organic phase.",
+          "detail": "Lysed sample is mixed with phenol and chloroform; after centrifugation it separates into an upper aqueous phase holding the DNA and a lower organic phase holding denatured proteins and lipids, with cellular debris trapped at the interface. The aqueous phase is transferred off and the DNA is concentrated by ethanol precipitation. It yields very high-molecular-weight, high-purity DNA and needs no specialised kit, but it's slow, hands-on, and uses hazardous, toxic organic solvents that need careful handling and disposal."
+        }
+      ],
       "qc": null
     },
     {
@@ -130,6 +150,26 @@
       "caption": "Illumina adapters are then ligated on both ends of each DNA fragment. Illumina adapters carry all the information the sequencer needs: flow-cell binding sites, primer sites, and indexes. Adapters are often Y-shaped with a T-overhang so that it specifically binds to the A overhang and does not allow for more than one adapter to ligate.",
       "trace": { "peaks": [ { "center": 380, "height": 0.8, "width": 110 }, { "center": 125, "height": 0.18, "width": 20 } ] },
       "traceAnnotation": { "peakIndex": 1, "label": "adapter contamination" },
+      "indexMethods": [
+        {
+          "id": "single",
+          "label": "Single indexing",
+          "summary": "Each sample gets one index sequence on just one adapter end (typically i7); samples are distinguished by that single barcode alone.",
+          "detail": "Only one of the two adapter ends carries a sample-specific index, so demultiplexing depends on correctly reading just that one barcode. It needs fewer unique index sequences and a simpler adapter inventory for small pools, but a misread or hopped index can't be cross-checked against anything else, so there's no way to catch or filter a misassigned read -- it's rarely used for larger, highly-multiplexed pools."
+        },
+        {
+          "id": "cdi",
+          "label": "Combinatorial dual indexing (CDI)",
+          "summary": "Each sample gets a pair of indexes (i5 + i7), but the individual index sequences are reused across many samples in different combinations.",
+          "detail": "A relatively small set of i5 and i7 sequences are combined pairwise, so the same i5 sequence might pair with several different i7 sequences across the pool, and vice versa. It needs far fewer unique index sequences to multiplex many samples, keeping the adapter inventory small, but if one of the two indexes hops onto a different molecule, the resulting pair can still match a different real sample in the pool -- so a hopped read is sometimes misassigned rather than caught."
+        },
+        {
+          "id": "udi",
+          "label": "Unique dual indexing (UDI)",
+          "summary": "Each sample gets its own unique i5 and i7 pair that is never reused anywhere else in the pool, in either position.",
+          "detail": "Every i5 and i7 sequence in the pool is unique to one sample and never appears in any other sample's pair, so if either index hops onto a different molecule, the resulting combination doesn't match any real sample and the read can be identified and filtered out during demultiplexing rather than silently misassigned. It needs a larger, non-reusable set of index adapters -- more expensive to stock for large pools -- but it's the standard recommendation whenever index-hopping risk matters, such as on patterned flow cells."
+        }
+      ],
       "breakIt": {
         "title": "Break it: common ligation failures",
         "failures": [
@@ -161,6 +201,20 @@
       "caption": "PCR completes or enriches full-length molecules and raises the yield. The first cycle is special: each original strand only has a primer site at one end, so polymerase must copy all the way across to create a proper binding site at the other end. From the second cycle on, primers anneal at both ends and every molecule doubles. Each cycle adds bias.",
       "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
       "pcrCycles": 8,
+      "ampMethods": [
+        {
+          "id": "pcr",
+          "label": "Standard PCR amplification",
+          "summary": "A few cycles of PCR amplify the adapter-ligated library before sequencing, using primers matching the P5/P7 regions shown here.",
+          "detail": "The ligated library is amplified with primers matching the P5 and P7 regions of the adapters, producing many copies of each fragment and raising the overall yield enough to sequence from a small amount of starting material. It works from low-input or lower-quality DNA where there isn't enough material to sequence directly, but every extra cycle introduces some duplication and amplification bias (see 'Break it' below)."
+        },
+        {
+          "id": "pcrfree",
+          "label": "PCR-free library prep",
+          "summary": "Skips amplification entirely -- enough adapter-ligated library is carried straight into sequencing without ever being copied by a polymerase.",
+          "detail": "Rather than amplifying the ligated library, enough input DNA is used up front that the post-ligation material alone is sufficient to load onto the flow cell. Because no PCR ever happens, there are no PCR duplicates and no GC/AT amplification bias, giving the most even, representative coverage across the genome. It needs considerably more, higher-quality starting DNA than a PCR-amplified protocol can get away with, so it isn't an option for low-input, degraded or precious samples."
+        }
+      ],
       "breakIt": {
         "title": "Break it: common PCR failures",
         "failures": [
@@ -239,6 +293,28 @@
       "id": "step9",
       "title": "Pool and final QC",
       "caption": "Pool libraries according to the desired ratio. Libraries can be pooled into one large pool or multiple smaller pools but it is crucial that no two libraries share the same index",
+      "breakIt": {
+        "title": "Break it: common pooling failures",
+        "failures": [
+          {
+            "id": "indexhop",
+            "label": "Index hopping",
+            "mechanism": "Free, unextended adapter or index primer carried over in the pool can misprime during cluster generation -- especially on patterned flow cells with ExAmp chemistry -- attaching the wrong sample's index to a read.",
+            "fingerprint": "Doesn't show up on a size trace -- hopped molecules are the normal library size. It only appears after demultiplexing, as a small fraction of reads for every index combination showing up under every other sample in the pool.",
+            "mitigation": "Use unique dual indexes (UDI) instead of combinatorial dual indexes, so a hopped read can't be demultiplexed as a false real sample, and keep free adapter/primer carryover low with a clean final bead clean-up.",
+            "visual": "indexhop"
+          },
+          {
+            "id": "anneal",
+            "label": "Adapter annealing",
+            "mechanism": "Pooled libraries can partially denature during storage or handling, and the single-stranded adapter ends re-anneal to each other instead of staying apart, chaining separate molecules together into much larger complexes.",
+            "fingerprint": "The DNA fragment distribution shows a much larger fragment size than expected, since the annealed complexes run as one much bigger apparent molecule rather than the true library size.",
+            "mitigation": "Run the pool through a couple of cycles of PCR -- it denatures the annealed complexes and re-synthesizes clean, correctly-sized double-stranded library molecules.",
+            "scale": 1.8,
+            "trace": { "center": 750, "width": 90, "height": 0.8 }
+          }
+        ]
+      },
       "trace": {
         "samples": [
           { "center": 378, "width": 100, "height": 0.88, "color": "var(--reg-p5)" },

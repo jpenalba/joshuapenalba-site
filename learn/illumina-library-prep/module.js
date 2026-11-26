@@ -1077,6 +1077,81 @@
     });
   }
 
+  // Index hopping: three pooled libraries drawn as small grids of
+  // index-coloured chips. Almost every chip keeps its own library's colour,
+  // but a free adapter/primer occasionally misprimes on a neighbouring
+  // library during cluster generation, so one chip in each of the two
+  // later grids carries the colour -- and a travelling arrow -- of an
+  // earlier library's index instead of its own.
+  function drawBreakItIndexHopping(svg) {
+    const cy = 56, cols = 4, rows = 3, cellW = 14, cellH = 14, chip = 9;
+    const gridW = cols * cellW, gridH = rows * cellH;
+    const clusterXs = [140, 320, 500];
+    const colors = ['var(--reg-p5)', 'var(--reg-read1)', 'var(--reg-p7)'];
+    const labels = ['Library A', 'Library B', 'Library C'];
+    const hoppedFrom = [null, 0, 1];
+    const hoppedSlot = 4; // second row, first column -- nearest the incoming arrow
+
+    clusterXs.forEach((cx, ci) => {
+      const startX = cx - gridW / 2 + cellW / 2, startY = cy - gridH / 2 + cellH / 2;
+      for (let i = 0; i < cols * rows; i++) {
+        const col = i % cols, row = Math.floor(i / cols);
+        const x = startX + col * cellW, y = startY + row * cellH;
+        const isHopped = hoppedFrom[ci] !== null && i === hoppedSlot;
+        const fill = isHopped ? colors[hoppedFrom[ci]] : colors[ci];
+        DNA.el('rect', { x: x - chip / 2, y: y - chip / 2, width: chip, height: chip, rx: 2, fill }, svg);
+        if (isHopped) {
+          DNA.el('rect', {
+            x: x - chip / 2 - 2, y: y - chip / 2 - 2, width: chip + 4, height: chip + 4, rx: 3,
+            fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1.2, 'stroke-dasharray': '2 2'
+          }, svg);
+        }
+      }
+      DNA.el('text', {
+        x: cx, y: cy + gridH / 2 + 18, 'text-anchor': 'middle',
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)'
+      }, svg).textContent = labels[ci];
+
+      if (hoppedFrom[ci] !== null) {
+        const fromX = clusterXs[hoppedFrom[ci]] + gridW / 2 + 6;
+        arrowTo(svg, fromX, cy, cx - gridW / 2 - 10, cy, colors[hoppedFrom[ci]]);
+      }
+    });
+  }
+
+  // Bar chart: almost all reads from each library are correctly assigned
+  // (solid colour), with a thin pale cap showing the small fraction that
+  // hopped to another library's index instead.
+  function drawIndexHoppingChart(svg) {
+    const topY = TRACE_PAD, botY = TRACE_H - TRACE_PAD, range = botY - topY;
+    DNA.el('line', { x1: TRACE_PAD, y1: botY, x2: TRACE_W - TRACE_PAD, y2: botY, stroke: 'var(--line-strong)', 'stroke-width': 1 }, svg);
+    DNA.el('text', { x: TRACE_W - TRACE_PAD, y: topY - 6, 'text-anchor': 'end', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-faint)' }, svg).textContent = '% of reads';
+
+    const bars = [
+      { label: 'Library A', color: 'var(--reg-p5)', correct: 0.91 },
+      { label: 'Library B', color: 'var(--reg-read1)', correct: 0.84 },
+      { label: 'Library C', color: 'var(--reg-p7)', correct: 0.88 }
+    ];
+    const slot = (TRACE_W - TRACE_PAD * 2) / bars.length;
+    const barW = 46;
+    bars.forEach((b, i) => {
+      const cx = TRACE_PAD + slot * i + slot / 2;
+      const bx = cx - barW / 2;
+      const hopH = (1 - b.correct) * range;
+      const correctH = range - hopH;
+      DNA.el('rect', { x: bx, y: topY, width: barW, height: hopH, rx: 2, fill: 'var(--ink-faint)', opacity: 0.6 }, svg);
+      DNA.el('rect', { x: bx, y: topY + hopH, width: barW, height: correctH, rx: 3, fill: b.color, opacity: 0.85 }, svg);
+      DNA.el('text', {
+        x: cx, y: TRACE_H + 18, 'text-anchor': 'middle',
+        'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
+      }, svg).textContent = b.label;
+    });
+    DNA.el('text', {
+      x: TRACE_W / 2, y: TRACE_H + 42, 'text-anchor': 'middle',
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink-soft)'
+    }, svg).textContent = 'pale = hopped to another library';
+  }
+
   // Unique reads fall off with every extra cycle once a library is mostly
   // re-copying the same molecules rather than amplifying new ones.
   function drawDuplicateRateChart(svg) {
@@ -1170,6 +1245,10 @@
         chartTitle.textContent = 'Unique reads vs. PCR cycle';
         drawBreakItDuplicates(stageSvg);
         drawDuplicateRateChart(chartSvg);
+      } else if (f.visual === 'indexhop') {
+        chartTitle.textContent = 'Reads assigned per library';
+        drawBreakItIndexHopping(stageSvg);
+        drawIndexHoppingChart(chartSvg);
       } else {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItSizeFailure(stageSvg, f.scale);
@@ -1294,9 +1373,11 @@
       <p class="step-caption">${step.caption}</p>
       <div class="step-visual">
         <div class="stage-card">
-          <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
-          ${step.fragMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
-          ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
+          <div class="stage-svg-wrap">
+            <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
+            ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
+          </div>
+          ${step.extractionMethods || step.fragMethods || step.indexMethods || step.ampMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
         </div>
         <div class="data-panel">
           ${step.trace ? `<p class="data-panel-title mono">DNA fragment distribution</p><svg class="step-trace" viewBox="0 0 ${TRACE_W} ${TRACE_VIEW_H}" role="img" aria-label="Fragment size distribution at: ${step.title}"></svg>` : ''}
@@ -1373,8 +1454,17 @@
     if (step.quantMethods) {
       buildMethodAccordion(widgets, step.quantMethods, step.id);
     }
+    if (step.extractionMethods) {
+      buildMethodAccordion(stageMethods, step.extractionMethods, step.id);
+    }
     if (step.fragMethods) {
       buildMethodAccordion(stageMethods, step.fragMethods, step.id);
+    }
+    if (step.indexMethods) {
+      buildMethodAccordion(stageMethods, step.indexMethods, step.id);
+    }
+    if (step.ampMethods) {
+      buildMethodAccordion(stageMethods, step.ampMethods, step.id);
     }
     if (step.normalizeMethods) {
       buildMethodAccordion(stageMethods, step.normalizeMethods, step.id);
