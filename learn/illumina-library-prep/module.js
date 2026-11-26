@@ -262,9 +262,118 @@
     captionLines(svg, ['Nuclease degrades DNA', 'above a fixed amount'], 118);
   }
 
+  // DNA binds a silica membrane in a spin column while everything else
+  // (small dots) flows straight through.
+  function drawColumnExtraction(svg) {
+    DNA.el('path', { d: 'M55 15 L115 15 L100 55 L70 55 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2 }, svg);
+    DNA.el('line', { x1: 70, y1: 55, x2: 100, y2: 55, stroke: 'var(--reg-p7)', 'stroke-width': 3 }, svg);
+    DNA.el('rect', { x: 78, y: 50, width: 14, height: 6, rx: 2, fill: 'var(--mol-highlight)' }, svg);
+    [[72, 68], [85, 76], [96, 70]].forEach(([x, y]) => {
+      DNA.el('circle', { cx: x, cy: y, r: 2, fill: 'var(--ink-faint)' }, svg);
+    });
+    DNA.el('path', { d: 'M65 85 L65 98 Q65 106 85 106 Q105 106 105 98 L105 85 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 1.6 }, svg);
+    captionLines(svg, ['DNA binds membrane,', 'waste flows through'], 118);
+  }
+
+  // Beads suspended through the lysate get pulled to one wall by the
+  // magnet, carrying bound DNA with them; the rest stays in solution.
+  function drawBeadExtraction(svg) {
+    DNA.el('path', { d: 'M55 20 L55 85 Q55 100 85 100 Q115 100 115 85 L115 20 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2 }, svg);
+    DNA.el('rect', { x: 62, y: 42, width: 22, height: 6, rx: 2, fill: 'var(--reg-read1)', opacity: 0.4 }, svg);
+    [[95, 40], [98, 50], [93, 60], [99, 70], [95, 78]].forEach(([x, y]) => {
+      DNA.el('circle', { cx: x, cy: y, r: 2.6, fill: 'var(--ink-faint)' }, svg);
+    });
+    DNA.el('rect', { x: 118, y: 45, width: 12, height: 32, rx: 3, fill: 'var(--line-strong)' }, svg);
+    DNA.el('text', { x: 124, y: 64, 'text-anchor': 'middle', 'font-family': "'IBM Plex Mono', monospace", 'font-size': 10, fill: '#fff' }, svg).textContent = 'M';
+    captionLines(svg, ['Beads bind DNA,', 'magnet pulls them aside'], 118);
+  }
+
+  // Classic two-phase separation: DNA stays in the upper aqueous layer,
+  // proteins/lipids settle in the lower organic layer, debris at the
+  // interface between them.
+  function drawPhenolChloroform(svg) {
+    DNA.el('path', { d: 'M55 15 L55 95 Q55 108 85 108 Q115 108 115 95 L115 15 Z', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 2 }, svg);
+    DNA.el('path', { d: 'M57 17 L113 17 L113 55 L57 55 Z', fill: 'var(--reg-i5)', opacity: 0.3 }, svg);
+    DNA.el('path', { d: 'M57 60 L113 60 L113 93 Q113 105 85 105 Q57 105 57 93 Z', fill: 'var(--reg-p7)', opacity: 0.35 }, svg);
+    [[65, 57], [75, 58], [95, 57], [105, 58]].forEach(([x, y]) => {
+      DNA.el('circle', { cx: x, cy: y, r: 1.6, fill: 'var(--mol-backbone)' }, svg);
+    });
+    [[70, 30], [90, 38], [80, 45]].forEach(([x, y]) => {
+      DNA.el('circle', { cx: x, cy: y, r: 2.2, fill: 'var(--mol-highlight)' }, svg);
+    });
+    captionLines(svg, ['DNA stays in the', 'upper aqueous phase'], 118);
+  }
+
+  // Single indexing: only one adapter end (i7) carries a barcode, the
+  // other stays plain.
+  function drawSingleIndex(svg) {
+    DNA.el('rect', { x: 55, y: 58, width: 60, height: 10, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('rect', { x: 45, y: 58, width: 14, height: 10, rx: 3, fill: 'var(--mol-removed)' }, svg);
+    DNA.el('rect', { x: 111, y: 58, width: 14, height: 10, rx: 3, fill: 'var(--reg-i7)' }, svg);
+    captionLines(svg, ['Only one end', 'carries an index'], 118);
+  }
+
+  // Combinatorial dual indexing: the same i5 sequence (shared colour)
+  // pairs with a different i7 sequence on each of two samples.
+  function drawCDI(svg) {
+    const rows = [{ y: 42, i7: 'var(--reg-i7)' }, { y: 68, i7: 'var(--reg-p7)' }];
+    rows.forEach(r => {
+      DNA.el('rect', { x: 55, y: r.y, width: 60, height: 10, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+      DNA.el('rect', { x: 45, y: r.y, width: 14, height: 10, rx: 3, fill: 'var(--reg-i5)' }, svg);
+      DNA.el('rect', { x: 111, y: r.y, width: 14, height: 10, rx: 3, fill: r.i7 }, svg);
+    });
+    DNA.el('path', { d: 'M40 47 Q34 60 40 73', fill: 'none', stroke: 'var(--ink-faint)', 'stroke-width': 1.3, 'stroke-dasharray': '2 2' }, svg);
+    captionLines(svg, ['Same index reused', 'in different pairs'], 118);
+  }
+
+  // Unique dual indexing: neither index colour repeats between samples --
+  // every pair is its own combination.
+  function drawUDI(svg) {
+    const rows = [
+      { y: 42, i5: 'var(--reg-i5)', i7: 'var(--reg-i7)' },
+      { y: 68, i5: 'var(--reg-p5)', i7: 'var(--reg-p7)' }
+    ];
+    rows.forEach(r => {
+      DNA.el('rect', { x: 55, y: r.y, width: 60, height: 10, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+      DNA.el('rect', { x: 45, y: r.y, width: 14, height: 10, rx: 3, fill: r.i5 }, svg);
+      DNA.el('rect', { x: 111, y: r.y, width: 14, height: 10, rx: 3, fill: r.i7 }, svg);
+    });
+    captionLines(svg, ['Every pair is', 'unique in the pool'], 118);
+  }
+
+  // Standard PCR: one molecule branches into two identical copies each
+  // cycle, looped to show it repeating many times.
+  function drawPCRIcon(svg) {
+    DNA.el('rect', { x: 70, y: 14, width: 30, height: 8, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('path', { d: 'M85 22 L85 34 M85 34 L60 34 L60 42 M85 34 L110 34 L110 42', fill: 'none', stroke: 'var(--ink-faint)', 'stroke-width': 1.6 }, svg);
+    DNA.el('rect', { x: 45, y: 42, width: 30, height: 8, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('rect', { x: 95, y: 42, width: 30, height: 8, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('path', { d: 'M60 70 A20 20 0 1 1 110 70', fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2 }, svg);
+    DNA.el('polygon', { points: '106,63 112,70 101,72', fill: 'var(--accent)' }, svg);
+    captionLines(svg, ['Repeated cycles', 'double each molecule'], 118);
+  }
+
+  // PCR-free: the ligated molecule goes straight to the flow cell: a
+  // crossed-out repeat-cycle icon marks that no amplification happens.
+  function drawPCRFreeIcon(svg) {
+    DNA.el('rect', { x: 55, y: 18, width: 60, height: 9, rx: 3, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('line', { x1: 85, y1: 29, x2: 85, y2: 50, stroke: 'var(--ink-faint)', 'stroke-width': 1.8 }, svg);
+    DNA.el('polygon', { points: '80,45 90,45 85,53', fill: 'var(--ink-faint)' }, svg);
+    DNA.el('rect', { x: 45, y: 58, width: 80, height: 10, rx: 2, fill: 'var(--line-strong)' }, svg);
+    [60, 85, 110].forEach(x => {
+      DNA.el('line', { x1: x, y1: 58, x2: x, y2: 48, stroke: 'var(--reg-p5)', 'stroke-width': 2 }, svg);
+    });
+    DNA.el('path', { d: 'M65 86 A12 12 0 1 1 105 86', fill: 'none', stroke: 'var(--ink-faint)', 'stroke-width': 1.6 }, svg);
+    DNA.el('line', { x1: 60, y1: 78, x2: 110, y2: 96, stroke: 'var(--mol-damaged)', 'stroke-width': 2 }, svg);
+    captionLines(svg, ['Straight to the', 'flow cell, no cycles'], 118);
+  }
+
   const ILLUS_DRAWERS = {
     nanodrop: drawNanodrop, qubit: drawQubit, sonication: drawSonication, enzymatic: drawEnzymatic, tagmentation: drawTagmentation,
-    beadsel: drawBeadSelect, gelexcision: drawGelExcision, enzymaticnorm: drawEnzymaticNorm
+    beadsel: drawBeadSelect, gelexcision: drawGelExcision, enzymaticnorm: drawEnzymaticNorm,
+    column: drawColumnExtraction, beads: drawBeadExtraction, phenolchloroform: drawPhenolChloroform,
+    single: drawSingleIndex, cdi: drawCDI, udi: drawUDI,
+    pcr: drawPCRIcon, pcrfree: drawPCRFreeIcon
   };
 
   // Shared expandable "method" accordion used both for DNA-quantification
@@ -1059,6 +1168,35 @@
     }, svg).textContent = 'fusion junction';
   }
 
+  // Adapter annealing: two otherwise-complete library molecules (each with
+  // its own insert and Y-adapters on both ends) whose facing adapter arms
+  // splay toward each other far enough to overlap -- unlike chimera's
+  // direct backbone-to-backbone fusion, here it's the single-stranded
+  // adapter arms themselves re-annealing, chaining separate molecules into
+  // one much larger apparent complex.
+  function drawBreakItAdapterAnneal(svg) {
+    const cy = BREAKIT_H / 2;
+    const fh = 11, fgap = 7, stemW = 14, armLength = 36, spread = 24;
+    const segW = 130, gapW = 50;
+    const leftCx = BREAKIT_W / 2 - (segW + gapW) / 2, rightCx = BREAKIT_W / 2 + (segW + gapW) / 2;
+    [leftCx, rightCx].forEach(cx => {
+      const lx = cx - segW / 2, rx = cx + segW / 2;
+      DNA.fragmentOverhang(svg, { x: lx, y: cy, width: segW, height: fh, gap: fgap, overhangs: {} });
+      drawYAdapterEnd(svg, {
+        x: lx, y: cy, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
+        colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
+      });
+      drawYAdapterEnd(svg, {
+        x: rx, y: cy, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
+        colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
+      });
+    });
+    DNA.el('text', {
+      x: BREAKIT_W / 2, y: cy - fgap / 2 - fh - spread - 12, 'text-anchor': 'middle',
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 14, fill: 'var(--ink-soft)'
+    }, svg).textContent = 'adapters anneal to each other';
+  }
+
   // Over-amplification: a handful of original molecules, each surrounded
   // by a tight cluster of dim, identical copies -- most of what's there
   // traces back to only a few starting templates.
@@ -1249,6 +1387,10 @@
         chartTitle.textContent = 'Reads assigned per library';
         drawBreakItIndexHopping(stageSvg);
         drawIndexHoppingChart(chartSvg);
+      } else if (f.visual === 'anneal') {
+        chartTitle.textContent = 'DNA fragment distribution';
+        drawBreakItAdapterAnneal(stageSvg);
+        buildTrace(chartSvg, [f.trace]);
       } else {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItSizeFailure(stageSvg, f.scale);

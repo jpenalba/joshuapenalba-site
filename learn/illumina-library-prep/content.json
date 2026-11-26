@@ -310,7 +310,7 @@
             "mechanism": "Pooled libraries can partially denature during storage or handling, and the single-stranded adapter ends re-anneal to each other instead of staying apart, chaining separate molecules together into much larger complexes.",
             "fingerprint": "The DNA fragment distribution shows a much larger fragment size than expected, since the annealed complexes run as one much bigger apparent molecule rather than the true library size.",
             "mitigation": "Run the pool through a couple of cycles of PCR -- it denatures the annealed complexes and re-synthesizes clean, correctly-sized double-stranded library molecules.",
-            "scale": 1.8,
+            "visual": "anneal",
             "trace": { "center": 750, "width": 90, "height": 0.8 }
           }
         ]
