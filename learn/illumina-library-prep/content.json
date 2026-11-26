@@ -307,15 +307,6 @@
             "fingerprint": "Doesn't show up on a size trace -- hopped molecules are the normal library size. It only appears after demultiplexing, as a small fraction of reads for every index combination showing up under every other sample in the pool.",
             "mitigation": "Use unique dual indexes (UDI) instead of combinatorial dual indexes, so a hopped read can't be demultiplexed as a false real sample, and keep free adapter/primer carryover low with a clean final bead clean-up.",
             "visual": "indexhop"
-          },
-          {
-            "id": "anneal",
-            "label": "Adapter annealing",
-            "mechanism": "Pooled libraries can partially denature during storage or handling, and the single-stranded adapter ends re-anneal to each other instead of staying apart, chaining separate molecules together into much larger complexes.",
-            "fingerprint": "The DNA fragment distribution shows a much larger fragment size than expected, since the annealed complexes run as one much bigger apparent molecule rather than the true library size.",
-            "mitigation": "Run the pool through a couple of cycles of PCR -- it denatures the annealed complexes and re-synthesizes clean, correctly-sized double-stranded library molecules.",
-            "visual": "anneal",
-            "trace": { "center": 750, "width": 90, "height": 0.8 }
           }
         ]
       },
@@ -330,6 +321,38 @@
         "title": "Final QC",
         "caption": "Prior to sending the sample for sequencing, a final quantification and size check should be run using a flourometer and an electropherogram, respectively. If the fragment size is still not as desired, you can run the pooled sample through a BluePippin. It is more important that there are no large fragments being sequenced as it can disrupt the process.",
         "electropherogram": { "center": 382, "width": 55, "conc": "18.4 ng/µL", "molarity": "72 nM" }
+      },
+      "finalQCBreakIt": {
+        "title": "Break it: common final QC issues",
+        "failures": [
+          {
+            "id": "anneal",
+            "label": "Adapter annealing",
+            "mechanism": "Pooled libraries can partially denature during storage or handling, and the single-stranded adapter ends re-anneal to each other instead of staying apart, chaining separate molecules together into much larger complexes.",
+            "fingerprint": "The DNA fragment distribution shows a much larger fragment size than expected, since the annealed complexes run as one much bigger apparent molecule rather than the true library size.",
+            "mitigation": "Run the pool through a couple of cycles of PCR -- it denatures the annealed complexes and re-synthesizes clean, correctly-sized double-stranded library molecules.",
+            "visual": "anneal",
+            "trace": { "center": 750, "width": 90, "height": 0.8 }
+          },
+          {
+            "id": "lowyield",
+            "label": "Small peak or low output",
+            "mechanism": "Too little input DNA, inefficient ligation or amplification, or too few PCR cycles can leave the final pooled library at a very low concentration.",
+            "fingerprint": "The electropherogram shows a small, low peak that barely rises above baseline -- making it hard to get an accurate size or molarity reading -- rather than the normal sharp, well-defined peak.",
+            "mitigation": "Run a few additional PCR cycles to raise the yield, though each extra cycle adds a little more amplification bias.",
+            "visual": "lowyield",
+            "trace": { "center": 382, "width": 55, "height": 0.15 }
+          },
+          {
+            "id": "adaptercontam",
+            "label": "Adapter contamination",
+            "mechanism": "Leftover adapter dimers from ligation or PCR that weren't fully removed during clean-up end up carried all the way through to the final pool.",
+            "fingerprint": "The electropherogram shows an extra peak at the adapter length (~120 bp), well below the true library size -- a sign that adapter dimers survived every earlier clean-up.",
+            "mitigation": "Run a tighter size-selection clean-up -- e.g. gel excision using a BluePippin -- to physically remove the short adapter peak from the pool before sequencing.",
+            "visual": "dimer",
+            "traces": [ { "center": 382, "width": 55, "height": 0.85 }, { "center": 120, "width": 18, "height": 0.4 } ]
+          }
+        ]
       },
       "qc": null
     }

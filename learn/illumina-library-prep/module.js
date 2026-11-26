@@ -1299,24 +1299,40 @@
   // adapter arms themselves re-annealing, chaining separate molecules into
   // one much larger apparent complex.
   function drawBreakItAdapterAnneal(svg) {
-    const cy = BREAKIT_H / 2;
-    const fh = 11, fgap = 7, stemW = 14, armLength = 36, spread = 24;
-    const segW = 130, gapW = 50;
-    const leftCx = BREAKIT_W / 2 - (segW + gapW) / 2, rightCx = BREAKIT_W / 2 + (segW + gapW) / 2;
-    [leftCx, rightCx].forEach(cx => {
-      const lx = cx - segW / 2, rx = cx + segW / 2;
-      DNA.fragmentOverhang(svg, { x: lx, y: cy, width: segW, height: fh, gap: fgap, overhangs: {} });
-      drawYAdapterEnd(svg, {
-        x: lx, y: cy, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
-        colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
-      });
-      drawYAdapterEnd(svg, {
-        x: rx, y: cy, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
-        colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
-      });
+    const fh = 11, fgap = 7, stemW = 14, armLength = 36, spread = 24, segW = 150;
+    const junctionX = BREAKIT_W / 2;
+    const yTop = BREAKIT_H / 2 - 20, yBot = BREAKIT_H / 2 + 20;
+
+    // Top molecule: blue (P5/i5) on the left, orange (P7/i7) on the right.
+    // Its right (orange) end is the one that's about to anneal, so it's
+    // anchored at the shared junction column.
+    DNA.fragmentOverhang(svg, { x: junctionX - segW, y: yTop, width: segW, height: fh, gap: fgap, overhangs: {} });
+    drawYAdapterEnd(svg, {
+      x: junctionX - segW, y: yTop, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
+      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
     });
+    drawYAdapterEnd(svg, {
+      x: junctionX, y: yTop, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
+      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
+    });
+
+    // Bottom molecule: the inverse -- orange on the left, blue on the
+    // right. Its left (orange) end sits at that same junction column, so
+    // only the two orange ends line up; the two blue ends point away from
+    // each other in opposite directions, never meeting anything.
+    DNA.fragmentOverhang(svg, { x: junctionX, y: yBot, width: segW, height: fh, gap: fgap, overhangs: {} });
+    drawYAdapterEnd(svg, {
+      x: junctionX, y: yBot, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
+      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
+    });
+    drawYAdapterEnd(svg, {
+      x: junctionX + segW, y: yBot, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
+      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
+    });
+
+    const topArmTop = yTop - fgap / 2 - fh - spread;
     DNA.el('text', {
-      x: BREAKIT_W / 2, y: cy - fgap / 2 - fh - spread - 12, 'text-anchor': 'middle',
+      x: BREAKIT_W / 2, y: topArmTop - 12, 'text-anchor': 'middle',
       'font-family': "'IBM Plex Mono', monospace", 'font-size': 14, fill: 'var(--ink-soft)'
     }, svg).textContent = 'adapters anneal to each other';
   }
@@ -1337,6 +1353,18 @@
       });
       pcrMoleculeWithCaps(svg, ox, oy, w, capW);
     });
+  }
+
+  // Low yield: only a handful of resolved library molecules scattered
+  // across the stage -- there simply isn't much material, unlike a normal
+  // library where a dense cluster of molecules would fill the view.
+  function drawBreakItLowYield(svg) {
+    const positions = [[140, 55], [330, 85], [520, 50], [260, 100]];
+    positions.forEach(([x, y]) => pcrMoleculeWithCaps(svg, x, y, 34, 7));
+    DNA.el('text', {
+      x: BREAKIT_W / 2, y: BREAKIT_H - 14, 'text-anchor': 'middle',
+      'font-family': "'IBM Plex Mono', monospace", 'font-size': 14, fill: 'var(--ink-soft)'
+    }, svg).textContent = 'Only a handful of molecules recovered';
   }
 
   // Index hopping: three pooled libraries drawn as small grids of
@@ -1515,6 +1543,10 @@
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItAdapterAnneal(stageSvg);
         buildTrace(chartSvg, [f.trace]);
+      } else if (f.visual === 'lowyield') {
+        chartTitle.textContent = 'DNA fragment distribution';
+        drawBreakItLowYield(stageSvg);
+        buildTrace(chartSvg, [f.trace]);
       } else {
         chartTitle.textContent = 'DNA fragment distribution';
         drawBreakItSizeFailure(stageSvg, f.scale);
@@ -1655,6 +1687,7 @@
       ${step.libraryQC ? '<div class="breakit-block libqc-block"></div>' : ''}
       ${step.finalAnatomy ? '<div class="breakit-block final-anatomy-block"></div>' : ''}
       ${step.finalQC ? '<div class="breakit-block finalqc-block"></div>' : ''}
+      ${step.finalQCBreakIt ? '<div class="breakit-block finalqc-breakit-block"></div>' : ''}
     `;
     container.appendChild(section);
 
@@ -1748,6 +1781,9 @@
     }
     if (step.finalQC) {
       buildFinalQC(section.querySelector('.finalqc-block'), step.finalQC);
+    }
+    if (step.finalQCBreakIt) {
+      buildBreakIt(section.querySelector('.finalqc-breakit-block'), step.finalQCBreakIt);
     }
 
     // --- reveal on scroll ---
