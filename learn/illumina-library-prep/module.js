@@ -595,26 +595,30 @@
       DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
       DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
 
-      const tTopLeft = DNA.tOverhangSquare(svg, { x: f.x, y: topY, size: 11 });
-      const tBotRight = DNA.tOverhangSquare(svg, { x: f.x + f.w, y: botY, size: 11 });
-      gsap.set([tTopLeft, tBotRight], { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' });
-
+      // Each T-overhang marker is drawn as part of its Y-adapter group, at
+      // the exact spot the adapter will end up attached -- so it's not a
+      // separate reveal, it rides in with the adapter and lands already
+      // formed, right on top of where the P marker fades out.
       const leftAdapter = DNA.group(svg, {});
       drawYAdapterEnd(leftAdapter, {
         x: f.x, y: f.y, dir: -1, fh: adFh, fgap: adFgap, stemW: adStemW,
         stemColor: 'var(--reg-read1)', armLength: adArmLength, spread: adSpread,
         colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
       });
+      DNA.tOverhangSquare(leftAdapter, { x: f.x, y: topY, size: 11 });
+
       const rightAdapter = DNA.group(svg, {});
       drawYAdapterEnd(rightAdapter, {
         x: f.x + f.w, y: f.y, dir: 1, fh: adFh, fgap: adFgap, stemW: adStemW,
         stemColor: 'var(--reg-read2)', armLength: adArmLength, spread: adSpread,
         colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
       });
+      DNA.tOverhangSquare(rightAdapter, { x: f.x + f.w, y: botY, size: 11 });
+
       gsap.set(leftAdapter, { x: -40, opacity: 0 });
       gsap.set(rightAdapter, { x: 40, opacity: 0 });
 
-      return { pTop, pBotRight, tTopLeft, tBotRight, leftAdapter, rightAdapter };
+      return { pTop, pBotRight, leftAdapter, rightAdapter };
     });
 
     const tl = gsap.timeline({ paused: true });
@@ -622,8 +626,7 @@
     fragments.forEach((frag, i) => {
       const at = t0 + i * stagger;
       tl.to([frag.leftAdapter, frag.rightAdapter], { x: 0, opacity: 1, duration: slideDur, ease: 'power2.out' }, at)
-        .to([frag.pTop, frag.pBotRight], { opacity: 0, duration: swapDur }, at + slideDur)
-        .to([frag.tTopLeft, frag.tBotRight], { opacity: 1, scale: 1, duration: swapDur }, at + slideDur);
+        .to([frag.pTop, frag.pBotRight], { opacity: 0, duration: swapDur }, at + slideDur);
     });
 
     return { timeline: tl };
