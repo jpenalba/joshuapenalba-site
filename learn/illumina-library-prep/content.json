@@ -152,6 +152,7 @@
       "caption": "Illumina adapters are then ligated on both ends of each DNA fragment. Illumina adapters carry all the information the sequencer needs: flow-cell binding sites, primer sites, and indexes. Adapters are often Y-shaped with a T-overhang so that it specifically binds to the A overhang and does not allow for more than one adapter to ligate.",
       "trace": { "peaks": [ { "center": 380, "height": 0.8, "width": 110 }, { "center": 125, "height": 0.18, "width": 20 } ] },
       "traceAnnotation": { "peakIndex": 1, "label": "adapter contamination" },
+      "animated": true,
       "indexMethods": [
         {
           "id": "single",

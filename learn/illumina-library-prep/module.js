@@ -582,35 +582,58 @@
     DNA.yAdapterEnd(svg, { x: armX, topY, botY, dir, armLength, spread, strokeWidth: fh, colorTop, colorBottom });
   }
 
-  function drawAdapterLigation(svg) {
-    LIGATION_BG.forEach(f => {
-      const fh = 5, fgap = 3, stemW = 6, armLength = 12, spread = 7;
-      DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height: fh, gap: fgap, overhangs: {} });
-      drawYAdapterEnd(svg, {
-        x: f.x, y: f.y, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
-        colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
-      });
-      drawYAdapterEnd(svg, {
-        x: f.x + f.w, y: f.y, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
-        colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
-      });
+  // Adapter ligation, animated: starts from End repair's settled blunt+P+A
+  // fragments. The one already sitting on the stage's centre line (same y
+  // as MID_Y) becomes the zoomed-in focal fragment -- its old P/A markers
+  // fade as its bar grows out to FOCAL_W, then a Y-adapter grows onto each
+  // end and the A/T junction pairing fades in -- while the other six
+  // fragments simply fade out as the six already-ligated background
+  // fragments (LIGATION_BG) fade in behind it, the same split the old
+  // static image used.
+  function buildAdapterLigationAnimation(svg) {
+    svg.innerHTML = '';
+    const height = 7, gap = 5;
+
+    const heroIndex = SMEAR.findIndex(f => f.y === MID_Y);
+    const startFrags = SMEAR.map(f => {
+      const g = DNA.fragmentOverhang(svg, { x: f.x, y: f.y, width: f.w, height, gap, overhangs: {} });
+      const topRect = g.children[0], botRect = g.children[1];
+      const topY = f.y - gap / 2 - height / 2;
+      const botY = f.y + gap / 2 + height / 2;
+      const pTop = DNA.phosphateDot(svg, { x: f.x, y: topY, r: 6 });
+      const aTopRight = DNA.aTailSquare(svg, { x: f.x + f.w, y: topY, size: 11 });
+      const aBotLeft = DNA.aTailSquare(svg, { x: f.x, y: botY, size: 11 });
+      const pBotRight = DNA.phosphateDot(svg, { x: f.x + f.w, y: botY, r: 6 });
+      return { topRect, botRect, markers: [pTop, aTopRight, aBotLeft, pBotRight] };
     });
 
-    // Focal fragment: two equal strand bars (as in End repair/A-tailing),
-    // each continuing into a short primer-site stem and then its own
-    // Y-adapter arm -- top strand becomes the P5/P7 arm, bottom strand
-    // becomes the i5/i7 arm -- with the A/T overhang pairing that gives
-    // the ligation its specificity called out at each junction.
-    const fh = 12, fgap = 8, stemW = 18, armLength = 44, spread = 26;
-    DNA.fragmentOverhang(svg, { x: FOCAL_X, y: MID_Y, width: FOCAL_W, height: fh, gap: fgap, overhangs: {} });
-    drawYAdapterEnd(svg, {
-      x: FOCAL_X, y: MID_Y, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
+    const hero = startFrags[heroIndex];
+    const others = startFrags.filter((_, i) => i !== heroIndex);
+
+    const bgGroups = LIGATION_BG.map(f => {
+      const g = DNA.group(svg, {});
+      const fh = 5, fgap = 3, stemW = 6, armLength = 12, spread = 7;
+      DNA.fragmentOverhang(g, { x: f.x, y: f.y, width: f.w, height: fh, gap: fgap, overhangs: {} });
+      drawYAdapterEnd(g, { x: f.x, y: f.y, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread, colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)' });
+      drawYAdapterEnd(g, { x: f.x + f.w, y: f.y, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread, colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)' });
+      gsap.set(g, { opacity: 0 });
+      return g;
+    });
+
+    const heroFh = 12, heroFgap = 8, heroStemW = 18, heroArmLength = 44, heroSpread = 26;
+    const heroAdapterLeft = DNA.group(svg, {});
+    drawYAdapterEnd(heroAdapterLeft, {
+      x: FOCAL_X, y: MID_Y, dir: -1, fh: heroFh, fgap: heroFgap, stemW: heroStemW,
+      stemColor: 'var(--reg-read1)', armLength: heroArmLength, spread: heroSpread,
       colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
     });
-    drawYAdapterEnd(svg, {
-      x: FOCAL_X + FOCAL_W, y: MID_Y, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
+    const heroAdapterRight = DNA.group(svg, {});
+    drawYAdapterEnd(heroAdapterRight, {
+      x: FOCAL_X + FOCAL_W, y: MID_Y, dir: 1, fh: heroFh, fgap: heroFgap, stemW: heroStemW,
+      stemColor: 'var(--reg-read2)', armLength: heroArmLength, spread: heroSpread,
       colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
     });
+    gsap.set([heroAdapterLeft, heroAdapterRight], { opacity: 0, scale: 0.5, transformOrigin: '50% 50%' });
 
     // A/T pairing at each junction, diagonally opposite as in End repair/
     // A-tailing: the insert's own A-tail sits top-right/bottom-left, and
@@ -618,10 +641,33 @@
     const markerSize = 13;
     const topMarkerY = MID_Y - markerSize / 2 - 1;
     const botMarkerY = MID_Y + markerSize / 2 + 1;
-    DNA.tOverhangSquare(svg, { x: FOCAL_X, y: topMarkerY, size: markerSize });
-    DNA.aTailSquare(svg, { x: FOCAL_X, y: botMarkerY, size: markerSize });
-    DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: topMarkerY, size: markerSize });
-    DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W, y: botMarkerY, size: markerSize });
+    const junctionMarkers = [
+      DNA.tOverhangSquare(svg, { x: FOCAL_X, y: topMarkerY, size: markerSize }),
+      DNA.aTailSquare(svg, { x: FOCAL_X, y: botMarkerY, size: markerSize }),
+      DNA.aTailSquare(svg, { x: FOCAL_X + FOCAL_W, y: topMarkerY, size: markerSize }),
+      DNA.tOverhangSquare(svg, { x: FOCAL_X + FOCAL_W, y: botMarkerY, size: markerSize })
+    ];
+    gsap.set(junctionMarkers, { opacity: 0, scale: 0.4, transformOrigin: '50% 50%' });
+
+    const tl = gsap.timeline({ paused: true });
+    const t0 = 0.5, growDur = 1.0;
+
+    others.forEach((frag, i) => {
+      tl.to([frag.topRect, frag.botRect], { opacity: 0, duration: 0.5 }, t0 + i * 0.03)
+        .to(frag.markers, { opacity: 0, duration: 0.3 }, t0 + i * 0.03);
+    });
+    tl.to(hero.markers, { opacity: 0, duration: 0.3 }, t0)
+      .to(hero.topRect, { attr: { x: FOCAL_X, width: FOCAL_W }, duration: growDur, ease: 'power1.inOut' }, t0)
+      .to(hero.botRect, { attr: { x: FOCAL_X, width: FOCAL_W }, duration: growDur, ease: 'power1.inOut' }, t0);
+
+    const t1 = t0 + growDur + 0.3;
+    tl.to(bgGroups, { opacity: 1, duration: 0.4, stagger: 0.05 }, t1)
+      .to([heroAdapterLeft, heroAdapterRight], { opacity: 1, scale: 1, duration: 0.5 }, t1);
+
+    const t2 = t1 + 0.5 + 0.3;
+    tl.to(junctionMarkers, { opacity: 1, scale: 1, duration: 0.4, stagger: 0.08 }, t2);
+
+    return { timeline: tl };
   }
 
   // ---------- Library PCR: replayable exponential-amplification animation ----------
@@ -1669,7 +1715,9 @@
       section._endRepairTimeline = endRepair.timeline;
       wirePlayButton(section, endRepair.timeline, 'Play end repair animation', 'Replay end repair animation');
     } else if (step.id === 'step5') {
-      drawAdapterLigation(stageSvg);
+      const ligation = buildAdapterLigationAnimation(stageSvg);
+      section._ligationTimeline = ligation.timeline;
+      wirePlayButton(section, ligation.timeline, 'Play adapter ligation animation', 'Replay adapter ligation animation');
     } else if (step.id === 'step7') {
       const pcr = buildPCRAnimation(stageSvg, step.pcrCycles);
       section._pcrTimeline = pcr.timeline;
