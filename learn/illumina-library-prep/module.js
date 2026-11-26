@@ -973,9 +973,9 @@
     DNA.el('path', { d, fill: 'var(--accent)', opacity: 0.22, stroke: 'var(--accent)', 'stroke-width': 2 }, svg);
 
     const boxW = 150, boxX = x1 - boxW, boxY = y1 + 6;
-    DNA.el('rect', { x: boxX, y: boxY, width: boxW, height: 56, rx: 8, fill: 'var(--bg-raised)', stroke: 'var(--line)', 'stroke-width': 1 }, svg);
-    DNA.el('text', { x: boxX + 12, y: boxY + 23, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink)' }, svg).textContent = `Conc: ${data.conc}`;
-    DNA.el('text', { x: boxX + 12, y: boxY + 43, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 15, fill: 'var(--ink)' }, svg).textContent = `Molarity: ${data.molarity}`;
+    DNA.el('rect', { x: boxX, y: boxY, width: boxW, height: 48, rx: 8, fill: 'var(--bg-raised)', stroke: 'var(--line)', 'stroke-width': 1 }, svg);
+    DNA.el('text', { x: boxX + 12, y: boxY + 20, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--ink)' }, svg).textContent = `Conc: ${data.conc}`;
+    DNA.el('text', { x: boxX + 12, y: boxY + 37, 'font-family': "'IBM Plex Mono', monospace", 'font-size': 12, fill: 'var(--ink)' }, svg).textContent = `Molarity: ${data.molarity}`;
   }
 
   function buildFinalQC(mount, data) {
