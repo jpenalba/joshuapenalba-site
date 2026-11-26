@@ -150,6 +150,26 @@
       "caption": "Illumina adapters are then ligated on both ends of each DNA fragment. Illumina adapters carry all the information the sequencer needs: flow-cell binding sites, primer sites, and indexes. Adapters are often Y-shaped with a T-overhang so that it specifically binds to the A overhang and does not allow for more than one adapter to ligate.",
       "trace": { "peaks": [ { "center": 380, "height": 0.8, "width": 110 }, { "center": 125, "height": 0.18, "width": 20 } ] },
       "traceAnnotation": { "peakIndex": 1, "label": "adapter contamination" },
+      "indexMethods": [
+        {
+          "id": "single",
+          "label": "Single indexing",
+          "summary": "Each sample gets one index sequence on just one adapter end (typically i7); samples are distinguished by that single barcode alone.",
+          "detail": "Only one of the two adapter ends carries a sample-specific index, so demultiplexing depends on correctly reading just that one barcode. It needs fewer unique index sequences and a simpler adapter inventory for small pools, but a misread or hopped index can't be cross-checked against anything else, so there's no way to catch or filter a misassigned read -- it's rarely used for larger, highly-multiplexed pools."
+        },
+        {
+          "id": "cdi",
+          "label": "Combinatorial dual indexing (CDI)",
+          "summary": "Each sample gets a pair of indexes (i5 + i7), but the individual index sequences are reused across many samples in different combinations.",
+          "detail": "A relatively small set of i5 and i7 sequences are combined pairwise, so the same i5 sequence might pair with several different i7 sequences across the pool, and vice versa. It needs far fewer unique index sequences to multiplex many samples, keeping the adapter inventory small, but if one of the two indexes hops onto a different molecule, the resulting pair can still match a different real sample in the pool -- so a hopped read is sometimes misassigned rather than caught."
+        },
+        {
+          "id": "udi",
+          "label": "Unique dual indexing (UDI)",
+          "summary": "Each sample gets its own unique i5 and i7 pair that is never reused anywhere else in the pool, in either position.",
+          "detail": "Every i5 and i7 sequence in the pool is unique to one sample and never appears in any other sample's pair, so if either index hops onto a different molecule, the resulting combination doesn't match any real sample and the read can be identified and filtered out during demultiplexing rather than silently misassigned. It needs a larger, non-reusable set of index adapters -- more expensive to stock for large pools -- but it's the standard recommendation whenever index-hopping risk matters, such as on patterned flow cells."
+        }
+      ],
       "breakIt": {
         "title": "Break it: common ligation failures",
         "failures": [

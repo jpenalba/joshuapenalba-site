@@ -1374,7 +1374,7 @@
       <div class="step-visual">
         <div class="stage-card">
           <svg class="step-stage" id="${stageSvgId}" viewBox="0 0 ${STAGE_W} ${STAGE_H}" role="img" aria-label="Diagram of the library molecule at: ${step.title}"></svg>
-          ${step.extractionMethods || step.fragMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
+          ${step.extractionMethods || step.fragMethods || step.indexMethods || step.normalizeMethods ? '<div class="stage-methods"></div>' : ''}
           ${step.pcrCycles ? `<button type="button" class="pcr-play-btn" aria-label="Play PCR animation">${PCR_ICON_PLAY}</button>` : ''}
         </div>
         <div class="data-panel">
@@ -1457,6 +1457,9 @@
     }
     if (step.fragMethods) {
       buildMethodAccordion(stageMethods, step.fragMethods, step.id);
+    }
+    if (step.indexMethods) {
+      buildMethodAccordion(stageMethods, step.indexMethods, step.id);
     }
     if (step.normalizeMethods) {
       buildMethodAccordion(stageMethods, step.normalizeMethods, step.id);
