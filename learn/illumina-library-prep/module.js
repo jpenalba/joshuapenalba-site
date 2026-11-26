@@ -668,41 +668,15 @@
   // Three libraries with equal molecule counts -- pooling is about ratio,
   // not amount, so unlike Normalize's unequal clusters these are identical
   // -- each with an arrow converging into one shared tube.
-  // A microcentrifuge tube with its hinged lid flipped open: a tapered
-  // conical body under a collar, graduation ticks down one side, and the
-  // lid rotated open and back over the collar rather than drawn closed.
-  function drawTubeIcon(svg, cx, topY, w, h) {
-    const halfW = w / 2;
-    const shoulderY = topY + h * 0.32;
-    const tipY = topY + h;
-
-    const hingeX = cx + halfW - 2, hingeY = topY - 2;
-    const lidLen = 28, lidThick = 10, lidAngle = -102;
-    DNA.el('path', { d: `M ${hingeX} ${hingeY} Q ${hingeX + 6} ${hingeY - 10} ${hingeX + 2} ${hingeY - 18}`, fill: 'none', stroke: 'var(--ink-faint)', 'stroke-width': 1.3 }, svg);
-    DNA.el('rect', {
-      x: hingeX, y: hingeY - lidThick / 2, width: lidLen, height: lidThick, rx: 4,
-      fill: 'var(--bg-raised)', stroke: 'var(--ink-soft)', 'stroke-width': 1.6,
-      transform: `rotate(${lidAngle} ${hingeX} ${hingeY})`
-    }, svg);
-
-    DNA.el('rect', { x: cx - halfW - 5, y: topY - 7, width: w + 10, height: 11, rx: 3, fill: 'var(--bg-raised)', stroke: 'var(--ink-soft)', 'stroke-width': 1.6 }, svg);
-
-    const liquidTopY = topY + h * 0.62;
-    const liquidT = Math.max(0, (liquidTopY - shoulderY) / (tipY - shoulderY));
-    const liquidHalfW = halfW * (1 - liquidT);
-    DNA.el('path', { d: `M ${cx - liquidHalfW} ${liquidTopY} L ${cx} ${tipY} L ${cx + liquidHalfW} ${liquidTopY} Z`, fill: 'var(--reg-read1)', opacity: 0.3 }, svg);
-
-    DNA.el('path', {
-      d: `M ${cx - halfW} ${topY + 2} L ${cx - halfW} ${shoulderY} L ${cx} ${tipY} L ${cx + halfW} ${shoulderY} L ${cx + halfW} ${topY + 2}`,
-      fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 1.8, 'stroke-linejoin': 'round'
-    }, svg);
-
-    [0.48, 0.68, 0.85].forEach(f => {
-      const y = topY + h * f;
-      const t = Math.max(0, (y - shoulderY) / (tipY - shoulderY));
-      const hw = halfW * (1 - t);
-      DNA.el('line', { x1: cx + hw * 0.35, y1: y, x2: cx + hw * 0.9, y2: y, stroke: 'var(--ink-faint)', 'stroke-width': 1.3 }, svg);
-    });
+  // Eppendorf tube icon (open lid), a shared illustration asset rather than
+  // a hand-drawn shape -- see learn/illustrations/. Its own viewBox is
+  // 83.02x123.66, with the tube body roughly centred at local x=56 and
+  // its collar at local y=38.5; (cx, topY) positions that collar point.
+  function drawTubeIcon(svg, cx, topY, w) {
+    const scale = w / 83.02, h = 123.66 * scale;
+    const x = cx - 56 * scale, y = topY - 38.5 * scale;
+    DNA.el('image', { x, y, width: w, height: h, href: '../illustrations/eppendorf-open.svg' }, svg);
+    return { x, y, width: w, height: h };
   }
 
   function drawPoolMerge(svg) {
@@ -711,13 +685,13 @@
     const molW = 32, capW = 6, cellW = 42, cellH = 18;
     const labels = ['Library A', 'Library B', 'Library C'];
     const rows = Math.ceil(count / cols), gridW = cols * cellW, gridH = rows * cellH;
-    const tubeCx = 300, tubeTopY = 128, tubeW = 62, tubeH = 78;
+    const tubeCx = 300, tubeTopY = 128, tubeW = 66;
 
     // Tube drawn first so the arrows (and their arrowheads) land on top of
     // the lid rather than being painted over by it.
-    drawTubeIcon(svg, tubeCx, tubeTopY, tubeW, tubeH);
+    const tube = drawTubeIcon(svg, tubeCx, tubeTopY, tubeW);
     DNA.el('text', {
-      x: tubeCx, y: tubeTopY + tubeH + 20, 'text-anchor': 'middle',
+      x: tubeCx, y: tube.y + tube.height + 18, 'text-anchor': 'middle',
       'font-family': "'IBM Plex Mono', monospace", 'font-size': 13, fill: 'var(--ink-soft)'
     }, svg).textContent = 'Pooled library';
 
