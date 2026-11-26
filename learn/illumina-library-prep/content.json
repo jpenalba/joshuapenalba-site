@@ -71,6 +71,7 @@
       "title": "Fragmentation",
       "caption": "DNA is sheared into the intended target size. The more intact the DNA, the more shearing needs to occur. Ideally, all samples should have roughly the same size distribution.",
       "trace": { "peaks": [ { "center": 260, "height": 0.8, "width": 110 } ] },
+      "animated": true,
       "fragMethods": [
         {
           "id": "sonication",
@@ -200,6 +201,7 @@
       "title": "Library PCR",
       "caption": "PCR completes or enriches full-length molecules and raises the yield. The first cycle is special: each original strand only has a primer site at one end, so polymerase must copy all the way across to create a proper binding site at the other end. From the second cycle on, primers anneal at both ends and every molecule doubles. Each cycle adds bias.",
       "trace": { "peaks": [ { "center": 380, "height": 1.0, "width": 100 } ] },
+      "animated": true,
       "pcrCycles": 8,
       "ampMethods": [
         {
