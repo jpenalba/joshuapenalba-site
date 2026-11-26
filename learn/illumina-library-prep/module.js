@@ -1298,41 +1298,45 @@
   // direct backbone-to-backbone fusion, here it's the single-stranded
   // adapter arms themselves re-annealing, chaining separate molecules into
   // one much larger apparent complex.
+  // A single-stranded molecule, drawn as one straight bar with its two
+  // adapters simply in line with the insert (no Y-splay): a solid colour
+  // block at each end, a neutral insert segment in between.
+  function annealStrand(svg, { leftX, y, h, adapterW, insertW, leftColor, rightColor }) {
+    DNA.el('rect', { x: leftX, y: y - h / 2, width: adapterW, height: h, rx: 2, fill: leftColor }, svg);
+    DNA.el('rect', { x: leftX + adapterW, y: y - h / 2, width: insertW, height: h, rx: 2, fill: 'var(--mol-backbone)' }, svg);
+    DNA.el('rect', { x: leftX + adapterW + insertW, y: y - h / 2, width: adapterW, height: h, rx: 2, fill: rightColor }, svg);
+  }
+
   function drawBreakItAdapterAnneal(svg) {
-    const fh = 11, fgap = 7, stemW = 14, armLength = 36, spread = 24, segW = 150;
-    const junctionX = BREAKIT_W / 2;
+    const h = 13, adapterW = 55, insertW = 150;
     const yTop = BREAKIT_H / 2 - 20, yBot = BREAKIT_H / 2 + 20;
+    const blue = 'var(--reg-p5)', orange = 'var(--reg-p7)';
 
-    // Top molecule: blue (P5/i5) on the left, orange (P7/i7) on the right.
-    // Its right (orange) end is the one that's about to anneal, so it's
-    // anchored at the shared junction column.
-    DNA.fragmentOverhang(svg, { x: junctionX - segW, y: yTop, width: segW, height: fh, gap: fgap, overhangs: {} });
-    drawYAdapterEnd(svg, {
-      x: junctionX - segW, y: yTop, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
-      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
-    });
-    drawYAdapterEnd(svg, {
-      x: junctionX, y: yTop, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
-      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
-    });
+    // Top strand: blue on the left, orange on the right. Its orange end is
+    // centred on the stage -- that's the one about to anneal.
+    const orangeStart = BREAKIT_W / 2 - adapterW / 2;
+    const topLeftX = orangeStart - insertW - adapterW;
+    annealStrand(svg, { leftX: topLeftX, y: yTop, h, adapterW, insertW, leftColor: blue, rightColor: orange });
 
-    // Bottom molecule: the inverse -- orange on the left, blue on the
-    // right. Its left (orange) end sits at that same junction column, so
-    // only the two orange ends line up; the two blue ends point away from
-    // each other in opposite directions, never meeting anything.
-    DNA.fragmentOverhang(svg, { x: junctionX, y: yBot, width: segW, height: fh, gap: fgap, overhangs: {} });
-    drawYAdapterEnd(svg, {
-      x: junctionX, y: yBot, dir: -1, fh, fgap, stemW, stemColor: 'var(--reg-read2)', armLength, spread,
-      colorTop: 'var(--reg-p7)', colorBottom: 'var(--reg-i7)'
-    });
-    drawYAdapterEnd(svg, {
-      x: junctionX + segW, y: yBot, dir: 1, fh, fgap, stemW, stemColor: 'var(--reg-read1)', armLength, spread,
-      colorTop: 'var(--reg-p5)', colorBottom: 'var(--reg-i5)'
+    // Bottom strand: the inverse (orange on the left, blue on the right),
+    // shifted all the way right so its orange (left) segment sits in
+    // exactly the same x-range as the top strand's orange (right) segment
+    // -- the only part of the two strands that's actually parallel. The
+    // two blue ends land on opposite sides, far apart.
+    const botLeftX = orangeStart;
+    annealStrand(svg, { leftX: botLeftX, y: yBot, h, adapterW, insertW, leftColor: orange, rightColor: blue });
+
+    // A few short ticks between the two orange segments stand in for the
+    // base-pairing that's holding them together.
+    [-16, 0, 16].forEach(dx => {
+      DNA.el('line', {
+        x1: BREAKIT_W / 2 + dx, y1: yTop + h / 2 + 2, x2: BREAKIT_W / 2 + dx, y2: yBot - h / 2 - 2,
+        stroke: 'var(--ink-faint)', 'stroke-width': 1.5, 'stroke-dasharray': '2 2'
+      }, svg);
     });
 
-    const topArmTop = yTop - fgap / 2 - fh - spread;
     DNA.el('text', {
-      x: BREAKIT_W / 2, y: topArmTop - 12, 'text-anchor': 'middle',
+      x: BREAKIT_W / 2, y: yTop - h / 2 - 14, 'text-anchor': 'middle',
       'font-family': "'IBM Plex Mono', monospace", 'font-size': 14, fill: 'var(--ink-soft)'
     }, svg).textContent = 'adapters anneal to each other';
   }
