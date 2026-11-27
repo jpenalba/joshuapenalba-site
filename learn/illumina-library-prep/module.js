@@ -1714,10 +1714,10 @@
           <div class="step-widgets"></div>
         </div>
       </div>
-      ${step.breakIt ? '<div class="breakit-block"></div>' : ''}
       ${step.inputQC ? '<div class="breakit-block inputqc-block"></div>' : ''}
       ${step.fragQC ? '<div class="breakit-block fragqc-block"></div>' : ''}
       ${step.libraryQC ? '<div class="breakit-block libqc-block"></div>' : ''}
+      ${step.breakIt ? '<div class="breakit-block step-breakit-block"></div>' : ''}
       ${step.finalAnatomy ? '<div class="breakit-block final-anatomy-block"></div>' : ''}
       ${step.finalQC ? '<div class="breakit-block finalqc-block"></div>' : ''}
       ${step.finalQCBreakIt ? '<div class="breakit-block finalqc-breakit-block"></div>' : ''}
@@ -1799,7 +1799,7 @@
     }
 
     if (step.breakIt) {
-      buildBreakIt(section.querySelector('.breakit-block'), step.breakIt);
+      buildBreakIt(section.querySelector('.step-breakit-block'), step.breakIt);
     }
     if (step.inputQC) {
       buildInputQC(section.querySelector('.inputqc-block'), step.inputQC);
